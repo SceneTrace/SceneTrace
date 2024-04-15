@@ -1,12 +1,9 @@
-import os
-
-from db import *
+from src.db import *
 import pandas as pd
 import json
 
-if __name__ == '__main__':
+def migrate():
     createTable()
-    # initialize list of lists
     df = pd.read_csv("feature_vectors.csv")
     df["embedding"] = df["embedding"].astype(str)
     res = []

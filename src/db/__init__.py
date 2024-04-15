@@ -1,9 +1,9 @@
 import math
-import psycopg2
-from psycopg2.extras import execute_values
+
 import numpy as np
+import psycopg2
 from pgvector.psycopg2 import register_vector
-import pandas as pd
+from psycopg2.extras import execute_values
 
 conn = psycopg2.connect(database="postgres",
                         user="postgres",
@@ -13,7 +13,7 @@ conn = psycopg2.connect(database="postgres",
 
 def createTable():
     cur = conn.cursor()
-    cur.execute("CREATE EXTENSION IF NOT EXISTS vector");
+    cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
     register_vector(conn)
     table_create_command = """
     CREATE TABLE IF NOT EXISTS embeddings (
@@ -21,7 +21,7 @@ def createTable():
                 video_name text,
                 time_stamp text,
                 frame_num int,
-                embedding vector(15),
+                embedding vector(1609),
                 isIFrame boolean
                 );
                 """
@@ -53,7 +53,7 @@ def createIndex(data_frame):
         num_lists = math.sqrt(num_records)
 
     #use the cosine distance measure, which is what we'll later use for querying
-    cur.execute(f'CREATE INDEX ON embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = {num_lists});')
+    cur.execute(f'CREATE INDEX IF NOT EXITS ON embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = {num_lists});')
     conn.commit()
 
 
