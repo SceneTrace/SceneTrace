@@ -62,6 +62,6 @@ def get_top3_similar_docs(query_embedding):
     embedding_array = np.array(query_embedding)
     cur = conn.cursor()
     # Get the top 3 most similar documents using the KNN <=> operator
-    cur.execute("SELECT video_name, time_stamp FROM embeddings ORDER BY embedding <=> %s LIMIT 2", (embedding_array,))
+    cur.execute("SELECT video_name, time_stamp FROM embeddings ORDER BY embedding <=> %s LIMIT 3", (embedding_array,))
     top3_docs = cur.fetchall()
     return top3_docs
