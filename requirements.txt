@@ -9,3 +9,8 @@ pyyaml==6.0.1
 ruff==0.3.7
 setuptools==69.2.0
 virtualenv==20.25.1
+av==12.0.0
+numpy==1.26.4
+scikit-learn==1.4.2
+opencv-python==4.9.0.80
+moviepy==1.0.3
