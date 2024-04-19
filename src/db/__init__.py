@@ -4,6 +4,7 @@ import numpy as np
 import psycopg2
 from pgvector.psycopg2 import register_vector
 from psycopg2.extras import execute_values
+from collections import defaultdict
 
 conn = psycopg2.connect(database="postgres",
                         user="postgres",
@@ -51,17 +52,31 @@ def createIndex(data_frame):
         num_lists = 10
     if num_records > 1000000:
         num_lists = math.sqrt(num_records)
-
     #use the cosine distance measure, which is what we'll later use for querying
-    cur.execute(f'CREATE INDEX IF NOT EXITS ON embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = {num_lists});')
+    cur.execute(f'CREATE INDEX ON embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = {num_lists});')
     conn.commit()
 
 
-def get_top3_similar_docs(query_embedding):
+def get_top3_similar_docs(query_embedding, video_name):
     register_vector(conn)
     embedding_array = np.array(query_embedding)
     cur = conn.cursor()
     # Get the top 3 most similar documents using the KNN <=> operator
-    cur.execute("SELECT video_name, time_stamp FROM embeddings ORDER BY embedding <=> %s LIMIT 3", (embedding_array,))
+    cur.execute("SELECT video_name, time_stamp FROM embeddings where video_name = '{}' ORDER BY embedding <=> %s LIMIT 3".format(video_name), (embedding_array,))
     top3_docs = cur.fetchall()
     return top3_docs
+
+def get_video_name(query_embedding_list):
+    register_vector(conn)
+    cur = conn.cursor()
+    # Get the top 3 most similar documents using the KNN <=> operator
+    res = []
+    for query_embedding in query_embedding_list:
+        embedding_array = np.array(query_embedding)
+        cur.execute("SELECT video_name, time_stamp FROM embeddings ORDER BY embedding <=> %s LIMIT 1", (embedding_array,))
+        res.append(cur.fetchall())
+    dic = defaultdict(int)
+    print(res[0][0][0])
+    for i in res:
+        dic[i[0][0]] += 1
+    return max(dic, key=dic.get)
