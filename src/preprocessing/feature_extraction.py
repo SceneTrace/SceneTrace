@@ -1,9 +1,11 @@
+import time
+
 import cv2
 import os
 import numpy as np
 import librosa
 import pandas as pd
-from src.constants import ROOT_PATH
+from src.constants import ROOT_PATH, OUTPUT_DIR
 from src.preprocessing.utils import calculate_variance, extract_i_frames, process_audio_from_video, find_dominant_colors
 
 
@@ -59,7 +61,7 @@ def extract_audio_features(video_path, start_time_sec, end_time_sec=None):
     numpy.ndarray: A 1D numpy array containing the requested audio features.
     """
     # Get audio file path
-    audio_file_path = f'{ROOT_PATH}/Audios/{video_path.split("/")[-1].replace(".mp4", ".wav")}'
+    audio_file_path = f'{OUTPUT_DIR}/{video_path.split("/")[-1].replace(".mp4", ".wav")}'
 
     # Load the audio file with a sampling rate of 44.1 kHz
     audio_time_series, sr = librosa.load(audio_file_path, sr=44100, mono=True)
@@ -105,12 +107,14 @@ def extract_audio_features(video_path, start_time_sec, end_time_sec=None):
                      np.mean(mfcc_threshold)])
 
 
-def compute_features(video_file):
+def compute_features(video_file, block_size=8):
+    # compute timetaken
+    start = time.time()
     video_name = os.path.basename(video_file)
     i_frames = extract_i_frames(video_file)
     vectors = []
 
-    audio_file_path = f'{ROOT_PATH}/{video_name.replace(".mp4", ".wav")}'
+    audio_file_path = f'{OUTPUT_DIR}/{video_name.replace(".mp4", ".wav")}'
     if not os.path.exists(audio_file_path):
         process_audio_from_video(video_file, audio_file_path)
 
@@ -118,11 +122,13 @@ def compute_features(video_file):
         image = frame['image']
         start_timestamp = frame['start_timestamp']
         end_timestamp = frame['end_timestamp']
-        freq_vector = extract_freq_vectors(image, block_size=8)
+        freq_vector = extract_freq_vectors(image, block_size=block_size)
         frame_id = frame['id']
         color_vectors = extract_color_features(image)
         audio_vectors = extract_audio_features(video_name, start_timestamp, end_timestamp)
         embed = list(np.concatenate((freq_vector, color_vectors, audio_vectors), axis=0))
         vectors.append([video_name, start_timestamp, frame_id, embed, True])
     pandas_df = pd.DataFrame(vectors, columns=['video_name', 'time_stamp', 'frame_num', 'embedding', 'isIFrame'])
+    end = time.time()
+    print(f"Time taken to compute features for {video_name}: {end - start} seconds")
     return pandas_df

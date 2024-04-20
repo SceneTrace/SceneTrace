@@ -1,3 +1,5 @@
+import time
+
 from src.db import vector_client as vc
 from src.preprocessing import feature_extraction as fe
 from src.constants import OUTPUT_DIR
@@ -22,9 +24,13 @@ def load_vectors(csv_file):
 
 
 def search_video(video_file):
-    features = fe.compute_features(video_file)
-    embeddings = features["embeddings"]
+    start = time.time()
+    features = fe.compute_features(video_file, block_size=4)
+    embeddings = features["embedding"]
     vector_detected_video = vc.get_video_name(embeddings)
+    print("Detected video for {} : {}".format(video_file, vector_detected_video))
+    end = time.time()
+    print(f"Time taken to search video {video_file}: {end - start} seconds")
     return vector_detected_video
 
 

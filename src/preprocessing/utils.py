@@ -1,8 +1,12 @@
 import av
+import logging
 import numpy as np
 from sklearn.cluster import KMeans
 import cv2
 from moviepy.editor import VideoFileClip
+
+# Suppress av logging
+av.logging.set_level(av.logging.ERROR)
 
 
 def extract_i_frames(video_path):
