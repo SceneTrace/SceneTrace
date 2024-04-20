@@ -1,1 +1,2 @@
-ROOT_PATH = "src/db"
+ROOT_PATH = "./db"
+OUTPUT_DIR = "./output"

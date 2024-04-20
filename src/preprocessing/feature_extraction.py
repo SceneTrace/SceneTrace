@@ -1,8 +1,10 @@
 import cv2
+import os
 import numpy as np
 import librosa
+import pandas as pd
 from src.constants import ROOT_PATH
-from utils import find_dominant_colors, calculate_variance
+from src.preprocessing.utils import calculate_variance, extract_i_frames, process_audio_from_video, find_dominant_colors
 
 
 def extract_freq_vectors(img, block_size=8):
@@ -16,7 +18,7 @@ def extract_freq_vectors(img, block_size=8):
 
     # Initialize lists to store DC and AC coefficients
     dc_coefficients = []
-    #ac_coefficients = []
+    # ac_coefficients = []
 
     # Process each 8x8 block
     for i in range(0, h, block_size):
@@ -101,3 +103,26 @@ def extract_audio_features(video_path, start_time_sec, end_time_sec=None):
 
     return np.array([max_amplitude, max_frequency, min_amplitude, min_frequency, np.mean(mfcc_mean), np.mean(mfcc_std),
                      np.mean(mfcc_threshold)])
+
+
+def compute_features(video_file):
+    video_name = os.path.basename(video_file)
+    i_frames = extract_i_frames(video_file)
+    vectors = []
+
+    audio_file_path = f'{ROOT_PATH}/Audios/{video_name.replace(".mp4", ".wav")}'
+    if not os.path.exists(audio_file_path):
+        process_audio_from_video(video_file, audio_file_path)
+
+    for frame in i_frames:
+        image = frame['image']
+        start_timestamp = frame['start_timestamp']
+        end_timestamp = frame['end_timestamp']
+        freq_vector = extract_freq_vectors(image, block_size=8)
+        frame_id = frame['id']
+        color_vectors = extract_color_features(image)
+        audio_vectors = extract_audio_features(video_name, start_timestamp, end_timestamp)
+        embed = list(np.concatenate((freq_vector, color_vectors, audio_vectors), axis=0))
+        vectors.append([video_name, start_timestamp, frame_id, embed, True])
+    pandas_df = pd.DataFrame(vectors, columns=['video_name', 'time_stamp', 'frame_num', 'embedding', 'isIFrame'])
+    return pandas_df

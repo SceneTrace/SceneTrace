@@ -1,31 +1,62 @@
 import os
-import numpy as np
-import pandas as pd
-from constants import ROOT_PATH
-from preprocessing.feature_extraction import extract_freq_vectors, extract_color_features, extract_audio_features
-from preprocessing.utils import extract_i_frames, process_audio_from_video
+import argparse
+from constants import OUTPUT_DIR
+
+from utils.file_utils import files_in_directory, fetch_files
+from matching.matching_engine import load_vectors, search_video, extract_features
+
+
+def load(file_path):
+    # Load the feature vectors
+    csv_files = fetch_files(file_path, format=".csv")
+    for file in csv_files:
+        print("Loading features from {}".format(file))
+        load_vectors(file)
+
+
+def extract(file_path, store=False):
+    # Extract features from the video files
+    video_files = files_in_directory(file_path, format=".mp4")
+    for video_file in video_files:
+        print("Extracting features from {}".format(video_file))
+        extract_features(video_file, store=store)
+
+
+def search(file_path):
+    # Search the query video in the database
+    video_files = files_in_directory(file_path, format=".mp4")
+    for video_file in video_files:
+        print("Searching video {}".format(video_file))
+        search_video(video_file)
+
+
+def validate_args(arguments):
+    if len(arguments.inputs) < 1:
+        raise ValueError("Please provide the input file path")
+    if not os.path.exists(arguments.inputs[0]):
+        raise ValueError("Input file path does not exist")
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--action", type=str, required=False, help="Actions : Load, Extract, Search", default="Search")
+    parser.add_argument("--output-dir", type=str, required=False, help="Name of the video file.",
+                        default=OUTPUT_DIR)
+    parser.add_argument("--store", action="store_true", help="store the vectors")
+    parser.add_argument('inputs', nargs='*', help='Optional list of extra arguments without tags')
+    arguments = parser.parse_args()
+    validate_args(arguments)
+    return arguments
+
 
 if __name__ == "__main__":
-    i_frames = {}
-    for i in range(1, 2):
-        video_name = "queryvideo1.mp4"
-        video_path = os.path.join(ROOT_PATH, video_name)
-        i_frames[video_name] = extract_i_frames(video_path)
-        vectors = []
-        audio_file_path = f'{ROOT_PATH}/Audios/{video_name.replace(".mp4", ".wav")}'
-        if not os.path.exists(audio_file_path):
-            process_audio_from_video(video_path, audio_file_path)
-        for key, value in i_frames.items():
-            for frame in value:
-                image = frame['image']
-                start_timestamp = frame['start_timestamp']
-                end_timestamp = frame['end_timestamp']
-                freq_vector = extract_freq_vectors(image, block_size=8)
-                frame_id = frame['id']
-                color_vectors = extract_color_features(image)
-                audio_vectors = extract_audio_features(key, start_timestamp, end_timestamp)
-                embed = list(np.concatenate((freq_vector, color_vectors, audio_vectors), axis=0))
-                vectors.append([key, start_timestamp, frame_id, embed, True])
-        pandas_df = pd.DataFrame(vectors, columns=['video_name', 'time_stamp', 'frame_num', 'embedding', 'isIFrame'])
-        pandas_df.to_csv('src/db/feature_vectors_{}.csv'.format(video_name), index=False)
-        print("Done Processing {}".format(video_name))
+    # Parse command line arguments
+    args = parse_args()
+    if args.action.lower() == "load":
+        load(args.inputs[0])
+    elif args.action.lower() == "extract":
+        extract(args.inputs[0], store=args.store)
+    elif args.action.lower() == "search":
+        search(args.inputs[0])
+    else:
+        raise ValueError("Invalid action. Please provide a valid action: Load, Extract, Search")
