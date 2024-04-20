@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+*.wav
+*.mp4
+postgres_data/
+
 # C extensions
 *.so
 

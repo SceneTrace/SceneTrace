@@ -110,7 +110,7 @@ def compute_features(video_file):
     i_frames = extract_i_frames(video_file)
     vectors = []
 
-    audio_file_path = f'{ROOT_PATH}/Audios/{video_name.replace(".mp4", ".wav")}'
+    audio_file_path = f'{ROOT_PATH}/{video_name.replace(".mp4", ".wav")}'
     if not os.path.exists(audio_file_path):
         process_audio_from_video(video_file, audio_file_path)
 
