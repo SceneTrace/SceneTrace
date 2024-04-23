@@ -46,7 +46,7 @@ typing-extensions==4.11.0
 tzdata==2024.1
 urllib3==2.2.1
 virtualenv==20.25.1
-cfgv==3.4.0
+    cfgv==3.4.0
 distlib==0.3.8
 filelock==3.13.4
 identify==2.5.35
@@ -61,3 +61,5 @@ psycopg2-binary==2.9.9
 numpy==1.26.4
 pgvector==0.2.5
 pandas==2.2.2
+pysimplegui==5.0.4
+python-vlc==3.0.20123

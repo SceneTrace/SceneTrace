@@ -1,5 +1,6 @@
 import os
 import argparse
+import vlc
 from constants import OUTPUT_DIR
 
 from utils.file_utils import files_in_directory, fetch_files
@@ -43,7 +44,7 @@ def parse_args():
     parser.add_argument("--output-dir", type=str, required=False, help="Name of the video file.",
                         default=OUTPUT_DIR)
     parser.add_argument("--store", action="store_true", help="store the vectors")
-    parser.add_argument('inputs', nargs='*', help='Optional list of extra arguments without tags')
+    parser.add_argument("-p", "--player", type=bool, default=False, required=False, help="Play video using player")
     arguments = parser.parse_args()
     validate_args(arguments)
     return arguments
@@ -52,11 +53,15 @@ def parse_args():
 if __name__ == "__main__":
     # Parse command line arguments
     args = parse_args()
-    if args.action.lower() == "load":
-        load(args.inputs[0])
-    elif args.action.lower() == "extract":
-        extract(args.inputs[0], store=args.store)
-    elif args.action.lower() == "search":
-        search(args.inputs[0])
+    if args.player:
+        pass
     else:
-        raise ValueError("Invalid action. Please provide a valid action: Load, Extract, Search")
+        match args.action.lower():
+            case "load":
+                load(args.inputs[0])
+            case "extract":
+                extract(args.inputs[0], store=args.store)
+            case "search":
+                search(args.inputs[0])
+            case _:
+                raise ValueError("Invalid action. Please provide a valid action: Load, Extract, Search")
