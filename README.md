@@ -22,5 +22,10 @@ The project is structured into the following modules:
 - `utils/`: Provides utility functions and helper classes used across the project.
 - `models/`: Defines the data models used throughout the project.
 
+## Dependencies
+
+- `brew reinstall ffmpeg`
+- `pip install -r requirements.txt`
+
 ## License
 This project is licensed under the [MIT License](LICENSE).

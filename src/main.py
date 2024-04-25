@@ -1,9 +1,10 @@
 import os
 import argparse
 from constants import OUTPUT_DIR
+from src.db import audio_client as ac
 
 from utils.file_utils import files_in_directory, fetch_files
-from matching.matching_engine import load_vectors, search_video, extract_features
+from matching.matching_engine import load_vectors, search_video, extract_features, extract_audio_features, search_audio
 
 
 def load(file_path):
@@ -14,12 +15,21 @@ def load(file_path):
         load_vectors(file)
 
 
+# def extract(file_path, store=False):
+#     # Extract features from the video files
+#     video_files = files_in_directory(file_path, format=".mp4")
+#     for video_file in video_files:
+#         print("Extracting features from {}".format(video_file))
+#         extract_features(video_file, store=store)
+
 def extract(file_path, store=False):
     # Extract features from the video files
     video_files = files_in_directory(file_path, format=".mp4")
     for video_file in video_files:
         print("Extracting features from {}".format(video_file))
-        extract_features(video_file, store=store)
+        extract_audio_features(video_file, store=store)
+    ac.createIndex()
+
 
 
 def search(file_path):
@@ -27,7 +37,7 @@ def search(file_path):
     video_files = files_in_directory(file_path, format=".mp4")
     for video_file in video_files:
         print("Searching video {}".format(video_file))
-        search_video(video_file)
+        search_audio(video_file)
 
 
 def validate_args(arguments):
