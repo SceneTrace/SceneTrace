@@ -46,7 +46,7 @@ def createIndex():
     cur = conn.cursor()
     cur.execute("SELECT count(*) FROM audio_embeddings")
     num_records = cur.fetchone()
-    num_lists = num_records / 1000
+    num_lists = num_records[0] / 1000
     if num_lists < 10:
         num_lists = 10
     if num_records > 1000000:

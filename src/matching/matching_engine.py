@@ -14,7 +14,6 @@ from scipy import stats
 
 
 def load_vectors(csv_file):
-    vc.createTable()
     df = pd.read_csv(csv_file)
     df["embedding"] = df["embedding"].astype(str)
     res = []
@@ -24,8 +23,8 @@ def load_vectors(csv_file):
     temp_df = pd.DataFrame()
     temp_df["embedding"] = res
     df["embedding"] = temp_df["embedding"]
+    vc.createTable(df["embedding"].size())
     vc.insertEmbedding(df)
-    vc.createIndex(df)
 
 
 def search_video(video_file):
@@ -59,9 +58,8 @@ def search_audio(video_file):
 
 def extract_features(video_file, store=False):
     features = fe.compute_features(video_file)
-    vc.createTable()
+    vc.createTable(features["embedding"][0].size())
     vc.insertEmbedding(features)
-    vc.createIndex(features)
     output_file = os.path.join(OUTPUT_DIR, "feature_vectors_{}.csv".format(os.path.basename(video_file).split('.')[0]))
     if store:
         features.to_csv(output_file, index=False)

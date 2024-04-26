@@ -8,6 +8,7 @@ from scipy.fft import fft
 
 from src.constants import OUTPUT_DIR
 from src.preprocessing.utils import process_audio_from_video
+from src.utils.normalization import normalize_np_array
 from src.utils.np_util import append_zeros
 
 audio_time_series_dictionary = {}
@@ -77,8 +78,7 @@ def extract_fft(video_path):
         magnitude = append_zeros(np.array(magnitude), 1470)
         np_array.append(magnitude)
 
-    for i, lis in enumerate(np_array):
-        np_array[i] = (lis - mini) / (maxi - mini)
+    np_array = normalize_np_array(np_array, mini, maxi)
 
     return np_array
 

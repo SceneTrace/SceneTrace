@@ -1,10 +1,11 @@
-import os
 import argparse
-from constants import OUTPUT_DIR
-from src.db import audio_client as ac
+import os
 
+from constants import OUTPUT_DIR
+from matching.matching_engine import load_vectors, extract_features, extract_audio_features, search_audio
+from src.db import audio_client as ac
+from src.db import vector_client as vc
 from utils.file_utils import files_in_directory, fetch_files
-from matching.matching_engine import load_vectors, search_video, extract_features, extract_audio_features, search_audio
 
 
 def load(file_path):
@@ -13,23 +14,25 @@ def load(file_path):
     for file in csv_files:
         print("Loading features from {}".format(file))
         load_vectors(file)
+        vc.createIndex()
 
-
-# def extract(file_path, store=False):
-#     # Extract features from the video files
-#     video_files = files_in_directory(file_path, format=".mp4")
-#     for video_file in video_files:
-#         print("Extracting features from {}".format(video_file))
-#         extract_features(video_file, store=store)
 
 def extract(file_path, store=False):
     # Extract features from the video files
     video_files = files_in_directory(file_path, format=".mp4")
     for video_file in video_files:
         print("Extracting features from {}".format(video_file))
+        extract_features(video_file, store=store)
+    vc.createIndex()
+
+
+def extract_audio(file_path, store=False):
+    # Extract features from the video files
+    video_files = files_in_directory(file_path, format=".mp4")
+    for video_file in video_files:
+        print("Extracting features from {}".format(video_file))
         extract_audio_features(video_file, store=store)
     ac.createIndex()
-
 
 
 def search(file_path):
@@ -66,6 +69,7 @@ if __name__ == "__main__":
         load(args.inputs[0])
     elif args.action.lower() == "extract":
         extract(args.inputs[0], store=args.store)
+        # extract_audio(args.inputs[0], store=args.store)
     elif args.action.lower() == "search":
         search(args.inputs[0])
     else:
