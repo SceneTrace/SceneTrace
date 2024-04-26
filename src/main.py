@@ -14,7 +14,7 @@ def load(file_path):
     for file in csv_files:
         print("Loading features from {}".format(file))
         load_vectors(file)
-        vc.createIndex()
+    vc.createIndex()
 
 
 def extract(file_path, store=False):

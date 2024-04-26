@@ -58,9 +58,9 @@ def search_audio(video_file):
 
 def extract_features(video_file, store=False):
     features = fe.compute_features(video_file)
-    vc.createTable(features["embedding"][0].size())
+    vc.createTable(len(features["embedding"][0]))
     vc.insertEmbedding(features)
-    output_file = os.path.join(OUTPUT_DIR, "feature_vectors_{}.csv".format(os.path.basename(video_file).split('.')[0]))
+    output_file = os.path.join(OUTPUT_DIR, "feature_vectors_video_{}.csv".format(os.path.basename(video_file).split('.')[0]))
     if store:
         features.to_csv(output_file, index=False)
 
@@ -70,7 +70,7 @@ def extract_audio_features(video_file, store=False):
     ac.createTable()
     ac.insertEmbedding(features)
     # ac.createIndex()
-    output_file = os.path.join(OUTPUT_DIR, "feature_vectors_{}.csv".format(os.path.basename(video_file).split('.')[0]))
+    output_file = os.path.join(OUTPUT_DIR, "feature_vectors_audio_{}.csv".format(os.path.basename(video_file).split('.')[0]))
     if store:
         features.to_csv(output_file, index=False)
 
