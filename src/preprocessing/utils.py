@@ -42,7 +42,7 @@ def extract_frames(video_path):
     frame_rate = vidObj.get(cv2.CAP_PROP_FPS)
     while success:
         success, image = vidObj.read()
-        frames.append({'image': image, 'start_timestamp': count * frame_rate, 'id': count})
+        frames.append({'image': image, 'start_timestamp': count / frame_rate, 'id': count})
         count += 1
     return frames
 

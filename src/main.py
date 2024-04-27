@@ -1,8 +1,9 @@
 import argparse
 import os
+import time
 
 from constants import OUTPUT_DIR
-from matching.matching_engine import load_vectors, extract_features, extract_audio_features, search_audio
+from matching.matching_engine import load_vectors, extract_features, extract_audio_features, search_audio, search_video
 from src.db import audio_client as ac
 from src.db import vector_client as vc
 from utils.file_utils import files_in_directory, fetch_files
@@ -39,8 +40,12 @@ def search(file_path):
     # Search the query video in the database
     video_files = files_in_directory(file_path, format=".mp4")
     for video_file in video_files:
+        start = time.time()
         print("Searching video {}".format(video_file))
-        search_audio(video_file)
+        video_name = search_video(video_file)
+        search_audio(video_file, video_name)
+        end = time.time()
+        print("Searching video {} took {} seconds".format(video_file, end-start))
 
 
 def validate_args(arguments):

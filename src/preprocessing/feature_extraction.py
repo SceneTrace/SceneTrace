@@ -13,7 +13,6 @@ from src.utils.normalization import normalize_np_array
 
 def extract_freq_vectors(img, block_size=8):
     # Convert image to YCrCb and extract the Y channel
-    start = time.time()
     img_y = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)[:, :, 0]
 
     h, w = img_y.shape
@@ -124,10 +123,12 @@ def compute_features(video_file, block_size=8):
     frequencies = []
     dominant_colors = []
     variances = []
-    num_frames = len(frames)
+    num_frames = len(frames) - 1
     for i in range(0, num_frames, 30):
         frame = frames[i]
         image = frame['image']
+        if image is None:
+            print(f'WARNING: Frame {i} has no image belonging to {video_name}')
         freq_vector = extract_freq_vectors(image, block_size=block_size)
         max_frequency = max(max_frequency, max(freq_vector))
         min_frequency = min(min_frequency, min(freq_vector))
