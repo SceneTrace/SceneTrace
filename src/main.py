@@ -1,7 +1,8 @@
 import os
 import argparse
-import vlc
 from constants import OUTPUT_DIR
+import tkinter as tk
+from src.player import video_player
 
 from utils.file_utils import files_in_directory, fetch_files
 from matching.matching_engine import load_vectors, search_video, extract_features
@@ -44,9 +45,10 @@ def parse_args():
     parser.add_argument("--output-dir", type=str, required=False, help="Name of the video file.",
                         default=OUTPUT_DIR)
     parser.add_argument("--store", action="store_true", help="store the vectors")
-    parser.add_argument("-p", "--player", type=bool, default=False, required=False, help="Play video using player")
+    parser.add_argument("--player", action="store_true", help="Play video using player")
+    parser.add_argument('inputs', nargs='*', help='Optional list of extra arguments without tags')
     arguments = parser.parse_args()
-    validate_args(arguments)
+    # validate_args(arguments)
     return arguments
 
 
@@ -54,7 +56,21 @@ if __name__ == "__main__":
     # Parse command line arguments
     args = parse_args()
     if args.player:
-        pass
+        root = tk.Tk()
+        root.title("Video Player Application")
+        player = video_player.setup_player()
+
+        continue_playing = True
+        while continue_playing:
+            filepath = video_player.create_initial_layout(root)
+
+            if filepath:
+                print("Playing video: {}".format(filepath))
+                continue_playing = False
+            else:
+                break
+
+        root.destroy()  # Close the application window when done.
     else:
         match args.action.lower():
             case "load":
