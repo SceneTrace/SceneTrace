@@ -1,7 +1,11 @@
 import os
 import argparse
+import time
+
 from constants import OUTPUT_DIR
 import tkinter as tk
+
+from src import constants
 from src.player import video_player
 
 from utils.file_utils import files_in_directory, fetch_files
@@ -56,21 +60,32 @@ if __name__ == "__main__":
     # Parse command line arguments
     args = parse_args()
     if args.player:
-        root = tk.Tk()
-        root.title("Video Player Application")
         player = video_player.setup_player()
 
         continue_playing = True
         while continue_playing:
-            filepath = video_player.create_initial_layout(root)
+            # Initialize the main root window for each iteration
+            file_root = tk.Tk()
+            file_root.title(constants.APP_NAME)
+
+            # Use the root window for file selection
+            filepath = video_player.file_selection_layout(file_root)
+            file_root.destroy()  # Destroy the file selection window after use
 
             if filepath:
-                print("Playing video: {}".format(filepath))
-                continue_playing = False
-            else:
-                break
+                # Create a new window for loading
+                loading_root = tk.Tk()
+                loading_root.title(constants.APP_NAME)
+                video_player.start_loading_screen(loading_root)  # Start the loading animation
 
-        root.destroy()  # Close the application window when done.
+                # Set up a callback to end the loading process after 3 seconds
+                loading_root.after(3000, lambda: video_player.stop_loading_screen(loading_root))
+
+                # Start the main loop for the loading screen
+                loading_root.mainloop()
+                break
+            else:
+                continue_playing = False  # Exit the loop if no file is selected
     else:
         match args.action.lower():
             case "load":
