@@ -64,22 +64,17 @@ if __name__ == "__main__":
 
             # File selection
             filepath = video_player.file_selection()
-            vlc_instance, player = video_player.setup_player()
+            vlc_instance = video_player.setup_player()
 
             if filepath:
                 # Create a new window for loading
                 loading_root = tk.Tk()
                 loading_root.title(constants.APP_NAME)
                 video_player.start_loading_screen(loading_root)  # Start the loading animation
-
-                # Set up a callback to end the loading process after 3 seconds
-                loading_root.after(3000, lambda: video_player.stop_loading_screen(loading_root))
-
-                # Start the main loop for the loading screen
+                loading_root.after(1000, lambda: video_player.stop_loading_screen(loading_root))
                 loading_root.mainloop()
 
-                video_player.play_video(player, vlc_instance, filepath)  # Play the video in a new window
-                break
+                continue_playing = video_player.play_video(vlc_instance, filepath)  # Play the video in a new window
             else:
                 continue_playing = False  # Exit the loop if no file is selected
     else:

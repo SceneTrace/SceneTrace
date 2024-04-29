@@ -16,9 +16,7 @@ def setup_player():
     ]
     # Create a new VLC instance with the specified options
     vlc_instance = vlc.Instance(options)
-    # Create a VLC media player with this instance
-    player = vlc_instance.media_player_new()
-    return vlc_instance, player
+    return vlc_instance
 
 
 def file_selection():
@@ -83,81 +81,103 @@ def stop_loading_screen(root):
     root.destroy()
 
 
-def play_video(player, vlc_instance, filepath):
-    # Create a new root window for the video
-    video_window = tk.Tk()
-    video_window.title("Video Player")
-
-    # Create a Canvas as a placeholder for the video
-    video_canvas = tk.Canvas(video_window, bg='black')
-    video_canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
-    # Load the video file into the VLC player using the instance
+def create_media_player(vlc_instance, filepath):
+    player = vlc_instance.media_player_new()
     media = vlc_instance.media_new(filepath)
     player.set_media(media)
+    return player
 
-    # Platform-specific maximization and window identifier settings
-    if platform == "win32":  # Checks for Windows
-        video_window.state('zoomed')
-        player.set_hwnd(video_canvas.winfo_id())  # Window identifier for Windows
-    elif platform == "darwin":  # macOS
-        video_window.tk.call("wm", "attributes", ".", "-zoomed", "1")
-        player.set_nsobject(video_canvas.winfo_id())  # Window identifier for macOS
-    else:  # Linux or Unix-like OS
-        video_window.attributes('-zoomed', True)
-        player.set_xwindow(video_canvas.winfo_id())  # Window identifier for Linux
 
-    # Load control images
-    res_path = os.path.join(os.path.dirname(__file__), "res")
-    play_image = tk.PhotoImage(file=os.path.join(res_path, "play.png"))
-    pause_image = tk.PhotoImage(file=os.path.join(res_path, "pause.png"))
-    stop_image = tk.PhotoImage(file=os.path.join(res_path, "stop.png"))
+def setup_window(player, video_canvas):
+    if platform == "win32":
+        video_canvas.winfo_toplevel().state('zoomed')
+        player.set_hwnd(video_canvas.winfo_id())
+    elif platform == "darwin":
+        video_canvas.winfo_toplevel().tk.call("wm", "attributes", ".", "-zoomed", "1")
+        player.set_nsobject(video_canvas.winfo_id())
+    else:
+        video_canvas.winfo_toplevel().attributes('-zoomed', True)
+        player.set_xwindow(video_canvas.winfo_id())
 
-    # Frame for buttons and progress bar
-    control_frame = tk.Frame(video_window)
-    control_frame.pack(side=tk.BOTTOM, fill=tk.X)
 
-    # Button to toggle play and pause
-    toggle_button = tk.Button(control_frame, image=pause_image, command=lambda: toggle_play_pause(), height=40, width=40)
-    toggle_button.pack(side=tk.LEFT, padx=5, pady=5)
+def play_video(vlc_instance, filepath, start_frame=0):
+    def configure_style():
+        style = ttk.Style()
+        style.configure('Info.TLabel', font=('Helvetica', 12), anchor="w")  # Increased font and left-align
+        style.configure('Info.TButton', font=('Helvetica', 10))  # Increased font for buttons
 
-    # Stop button
-    stop_button = tk.Button(control_frame, image=stop_image, command=lambda: stop_video(), height=40, width=40)
-    stop_button.pack(side=tk.LEFT, padx=5, pady=5)
-
-    # Progress bar
-    progress = ttk.Progressbar(control_frame, length=200, mode='determinate')
-    progress.pack(side=tk.LEFT, padx=10, pady=10, fill=tk.X, expand=True)
-
-    # Function to toggle play and pause based on the player's state
-    def toggle_play_pause():
-        if player.is_playing():
-            player.pause()
-            toggle_button.config(image=play_image)  # Set button image to 'Play'
-        else:
-            player.play()
-            toggle_button.config(image=pause_image)  # Set button image to 'Pause'
-
-    # Function to stop the video player and close the window
-    def stop_video():
-        player.stop()
-        video_window.destroy()
-
-    # Function to update the progress bar
     def update_progress():
         if player.is_playing():
-            # Get the length of the video in milliseconds and current position
             length = player.get_length()
             time = player.get_time()
             if length > 0:
                 percentage = int((time / length) * 100)
                 progress['value'] = percentage
-        video_window.after(1000, update_progress)
+        video_window.after(1000, lambda: update_progress())
+
+    def close_player(new_query=False):
+        player.stop()
+        video_window.destroy()
+        return new_query
+
+    def toggle_play_pause():
+        if player.is_playing():
+            player.pause()
+            toggle_button.config(image=play_image)
+        else:
+            player.play()
+            toggle_button.config(image=pause_image)
+
+    def stop_video():
+        player.stop()
+        toggle_button.config(image=play_image)
+
+    video_window = tk.Tk()
+    video_window.title("Video Player")
+    configure_style()  # Apply the style configuration
+
+    player = create_media_player(vlc_instance, filepath)
+    video_canvas = tk.Canvas(video_window, bg='black', height=300, width=1500)
+    video_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    setup_window(player, video_canvas)
+
+    # Info and button frame
+    info_frame = tk.Frame(video_window, width=200)
+    info_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=20, pady=20)
+
+    # Labels with left alignment and larger fonts
+    tk.Label(info_frame, text=f"Video: {os.path.basename(filepath)}", anchor='w', font=('Helvetica', 12)).pack(fill='x')
+    tk.Label(info_frame, text=f"Start Frame: {start_frame}", anchor='w', font=('Helvetica', 12)).pack(fill='x')
+    tk.Label(info_frame, text="Processing Time: 30s", anchor='w', font=('Helvetica', 12)).pack(fill='x')
+
+    button_frame = tk.Frame(info_frame)
+    button_frame.pack(pady=10, anchor='w')
+
+    # Buttons with larger fonts
+    new_query_button = ttk.Button(button_frame, text="New Query", command=lambda: close_player(True),
+                                  style='Info.TButton')
+    new_query_button.pack(side=tk.LEFT, padx=10)
+
+    exit_button = ttk.Button(button_frame, text="Exit", command=lambda: close_player(False), style='Info.TButton')
+    exit_button.pack(side=tk.LEFT, padx=10)
+
+    # Control frame with buttons and progress bar
+    control_frame = tk.Frame(video_window)
+    control_frame.pack(side=tk.BOTTOM, fill=tk.X)
+    res_path = os.path.join(os.path.dirname(__file__), "res")
+    play_image = tk.PhotoImage(file=os.path.join(res_path, "play.png"))
+    pause_image = tk.PhotoImage(file=os.path.join(res_path, "pause.png"))
+    stop_image = tk.PhotoImage(file=os.path.join(res_path, "stop.png"))
+    toggle_button = tk.Button(control_frame, image=pause_image,
+                              command=lambda: toggle_play_pause())
+    toggle_button.pack(side=tk.LEFT, padx=5, pady=5)
+    tk.Button(control_frame, image=stop_image, command=lambda: stop_video()).pack(side=tk.LEFT,
+                                                                                  padx=5, pady=5)
+    progress = ttk.Progressbar(control_frame, length=500, mode='determinate')
+    progress.pack(side=tk.LEFT, padx=10, pady=10, fill=tk.X, expand=True)
 
     update_progress()
 
-    # Initial play
-    player.play()
-    toggle_button.config(image=pause_image)  # Initially set to "Pause" since the video starts playing
+    toggle_button.config(image=play_image)  # Initially set to "Pause" since the video starts playing
 
     video_window.mainloop()
