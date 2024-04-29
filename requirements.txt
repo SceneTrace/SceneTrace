@@ -61,4 +61,3 @@ psycopg2-binary==2.9.9
 numpy==1.26.4
 pgvector==0.2.5
 pandas==2.2.2
-python-vlc==3.0.20123

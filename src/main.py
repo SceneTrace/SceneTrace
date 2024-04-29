@@ -1,6 +1,5 @@
 import os
 import argparse
-import time
 
 from constants import OUTPUT_DIR
 import tkinter as tk
@@ -60,17 +59,12 @@ if __name__ == "__main__":
     # Parse command line arguments
     args = parse_args()
     if args.player:
-        player = video_player.setup_player()
-
         continue_playing = True
         while continue_playing:
-            # Initialize the main root window for each iteration
-            file_root = tk.Tk()
-            file_root.title(constants.APP_NAME)
 
-            # Use the root window for file selection
-            filepath = video_player.file_selection_layout(file_root)
-            file_root.destroy()  # Destroy the file selection window after use
+            # File selection
+            filepath = video_player.file_selection()
+            vlc_instance, player = video_player.setup_player()
 
             if filepath:
                 # Create a new window for loading
@@ -83,6 +77,8 @@ if __name__ == "__main__":
 
                 # Start the main loop for the loading screen
                 loading_root.mainloop()
+
+                video_player.play_video(player, vlc_instance, filepath)  # Play the video in a new window
                 break
             else:
                 continue_playing = False  # Exit the loop if no file is selected
