@@ -34,6 +34,19 @@ def extract_i_frames(video_path):
     return data
 
 
+def extract_frames(video_path):
+    vidObj = cv2.VideoCapture(video_path)
+    count = 0
+    success = True
+    frames = []
+    frame_rate = vidObj.get(cv2.CAP_PROP_FPS)
+    while success:
+        success, image = vidObj.read()
+        frames.append({'image': image, 'start_timestamp': count / frame_rate, 'id': count})
+        count += 1
+    return frames
+
+
 def find_dominant_colors(frame, k=5):
     data = np.reshape(frame, (-1, 3))
     kmeans = KMeans(n_clusters=k, n_init=10, random_state=0).fit(data)

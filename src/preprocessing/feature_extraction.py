@@ -1,12 +1,14 @@
+import os
 import time
 
 import cv2
-import os
-import numpy as np
 import librosa
+import numpy as np
 import pandas as pd
-from src.constants import ROOT_PATH, OUTPUT_DIR
-from src.preprocessing.utils import calculate_variance, extract_i_frames, process_audio_from_video, find_dominant_colors
+
+from src.constants import OUTPUT_DIR
+from src.preprocessing.utils import calculate_variance, find_dominant_colors, extract_frames
+from src.utils.normalization import normalize_np_array
 
 
 def extract_freq_vectors(img, block_size=8):
@@ -38,7 +40,7 @@ def extract_color_features(image):
     dominant_colors = find_dominant_colors(frame, k=5)
     variance = calculate_variance(frame)
     dom = dominant_colors.flatten()
-    return np.concatenate((dom, variance), axis=0)
+    return dom, variance
 
 
 def extract_audio_features(video_path, start_time_sec, end_time_sec=None):
@@ -108,27 +110,52 @@ def extract_audio_features(video_path, start_time_sec, end_time_sec=None):
 
 
 def compute_features(video_file, block_size=8):
-    # compute timetaken
     start = time.time()
     video_name = os.path.basename(video_file)
-    i_frames = extract_i_frames(video_file)
+    frames = extract_frames(video_file)
     vectors = []
-
-    audio_file_path = f'{OUTPUT_DIR}/{video_name.replace(".mp4", ".wav")}'
-    if not os.path.exists(audio_file_path):
-        process_audio_from_video(video_file, audio_file_path)
-
-    for frame in i_frames:
+    max_frequency = 0
+    min_frequency = 10 ** 4
+    max_dominant_colors = 0
+    min_dominant_colors = 10 ** 4
+    max_variance = 0
+    min_variance = 10 ** 4
+    frequencies = []
+    dominant_colors = []
+    variances = []
+    num_frames = len(frames) - 1
+    for i in range(0, num_frames, 30):
+        frame = frames[i]
         image = frame['image']
-        start_timestamp = frame['start_timestamp']
-        end_timestamp = frame['end_timestamp']
+        if image is None:
+            print(f'WARNING: Frame {i} has no image belonging to {video_name}')
         freq_vector = extract_freq_vectors(image, block_size=block_size)
+        max_frequency = max(max_frequency, max(freq_vector))
+        min_frequency = min(min_frequency, min(freq_vector))
+        dom, variance = extract_color_features(image)
+        max_dominant_colors = max(max_dominant_colors, max(dom))
+        min_dominant_colors = min(min_dominant_colors, min(dom))
+        max_variance = max(max_variance, max(variance))
+        min_variance = max(min_variance, min(variance))
+        frequencies.append(freq_vector)
+        dominant_colors.append(dom)
+        variances.append(variance)
+    frequencies = normalize_np_array(frequencies, min_frequency, max_frequency)
+    variances = normalize_np_array(variances, min_variance, max_variance)
+    dominant_colors = normalize_np_array(dominant_colors, min_dominant_colors, max_dominant_colors)
+    count = 0
+    for i in range(0, num_frames, 30):
+        frame = frames[i]
+        start_timestamp = frame['start_timestamp']
         frame_id = frame['id']
-        color_vectors = extract_color_features(image)
-        audio_vectors = extract_audio_features(video_name, start_timestamp, end_timestamp)
-        embed = list(np.concatenate((freq_vector, color_vectors, audio_vectors), axis=0))
-        vectors.append([video_name, start_timestamp, frame_id, embed, True])
-    pandas_df = pd.DataFrame(vectors, columns=['video_name', 'time_stamp', 'frame_num', 'embedding', 'isIFrame'])
+        freq_vector = frequencies[count]
+        variance = variances[count]
+        dom = dominant_colors[count]
+        embed = list(np.concatenate((freq_vector, variance, dom), axis=0))
+        vectors.append([video_name, start_timestamp, frame_id, embed])
+        count += 1
+
+    pandas_df = pd.DataFrame(vectors, columns=['video_name', 'time_stamp', 'frame_num', 'embedding'])
     end = time.time()
     print(f"Time taken to compute features for {video_name}: {end - start} seconds")
     return pandas_df
