@@ -5,7 +5,7 @@ import time
 from constants import OUTPUT_DIR
 from matching.matching_engine import load_vectors, extract_video_features, extract_audio_features, search_audio, search_video
 from src.db import audio_client as ac
-from src.db import vector_client as vc
+from src.db import video_client as vc
 from utils.file_utils import files_in_directory, fetch_files
 
 

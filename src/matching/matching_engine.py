@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 
-from src.db import vector_client as vc
+from src.db import video_client as vc
 from src.db import audio_client as ac
 from src.preprocessing import feature_extraction as fe
 from src.preprocessing import audio_feature_extraction as afe
