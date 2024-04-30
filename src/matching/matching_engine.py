@@ -79,7 +79,6 @@ def extract_audio_features(video_file, store=False):
     features = afe.compute_features(video_file)
     ac.createTable()
     ac.insertEmbedding(features)
-    # ac.createIndex()
     output_file = os.path.join(OUTPUT_DIR,
                                "feature_vectors_audio_{}.csv".format(os.path.basename(video_file).split('.')[0]))
     if store:

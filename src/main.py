@@ -74,7 +74,7 @@ if __name__ == "__main__":
         load(args.inputs[0])
     elif args.action.lower() == "extract":
         extract(args.inputs[0], store=args.store)
-        # extract_audio(args.inputs[0], store=args.store)
+        extract_audio(args.inputs[0], store=args.store)
     elif args.action.lower() == "search":
         search(args.inputs[0])
     else:

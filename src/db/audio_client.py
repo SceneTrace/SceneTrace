@@ -51,7 +51,7 @@ def createIndex():
         num_lists = 10
     if num_records[0] > 1000000:
         num_lists = math.sqrt(num_records[0])
-    cur.execute(f'CREATE INDEX ON embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = {num_lists});')
+    cur.execute(f'CREATE INDEX ON audio_embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = {num_lists});')
     conn.commit()
 
 
