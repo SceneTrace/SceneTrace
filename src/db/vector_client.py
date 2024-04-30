@@ -11,6 +11,7 @@ conn = psycopg2.connect(database="postgres",
                         host='0.0.0.0',
                         port=5432)
 
+
 def createTable(len_of_embedding):
     cur = conn.cursor()
     cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
@@ -44,14 +45,14 @@ def insertEmbedding(data_frame):
 def createIndex():
     register_vector(conn)
     cur = conn.cursor()
-    cur.execute("SELECT count(*) FROM audio_embeddings")
+    cur.execute("SELECT count(*) FROM embeddings")
     num_records = cur.fetchone()
     num_lists = num_records[0] / 1000
     if num_lists < 10:
         num_lists = 10
     if num_records[0] > 1000000:
         num_lists = math.sqrt(num_records[0])
-    #use the cosine distance measure, which is what we'll later use for querying
+    # use the cosine distance measure, which is what we'll later use for querying
     cur.execute(f'CREATE INDEX ON embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = {num_lists});')
     conn.commit()
 
@@ -61,7 +62,8 @@ def get_top3_similar_docs(query_embedding, video_name):
     embedding_array = np.array(query_embedding)
     cur = conn.cursor()
     # Get the top 3 most similar documents using the KNN <=> operator
-    cur.execute("SELECT video_name, time_stamp FROM embeddings where video_name = '{}' ORDER BY embedding <=> %s LIMIT 3".format(video_name), (embedding_array,))
+    cur.execute("SELECT video_name, time_stamp FROM embeddings where video_name = '{}' ORDER BY"
+                " embedding <=> %s LIMIT 3".format(video_name), (embedding_array,))
     top3_docs = cur.fetchall()
     return top3_docs
 

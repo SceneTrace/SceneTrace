@@ -11,6 +11,7 @@ conn = psycopg2.connect(database="postgres",
                         host='0.0.0.0',
                         port=5432)
 
+
 def createTable():
     cur = conn.cursor()
     cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
@@ -33,9 +34,11 @@ def insertEmbedding(data_frame):
     register_vector(conn)
     cur = conn.cursor()
     # Prepare the list of tuples to insert
-    data_list = [(row['video_name'], row['time_stamp'], row['frame_num'], np.array(row['embedding'])) for _, row in data_frame.iterrows()]
+    data_list = [(row['video_name'], row['time_stamp'], row['frame_num'], np.array(row['embedding'])) for _, row in
+                 data_frame.iterrows()]
     # Use execute_values to perform batch insertion
-    execute_values(cur, "INSERT INTO audio_embeddings (video_name, time_stamp, frame_num, embedding) VALUES %s", data_list)
+    execute_values(cur, "INSERT INTO audio_embeddings (video_name, time_stamp, frame_num, embedding) VALUES %s",
+                   data_list)
     # Commit after we insert all embeddings
     conn.commit()
     cur.close()
@@ -51,7 +54,8 @@ def createIndex():
         num_lists = 10
     if num_records[0] > 1000000:
         num_lists = math.sqrt(num_records[0])
-    cur.execute(f'CREATE INDEX ON embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = {num_lists});')
+    cur.execute(
+        f'CREATE INDEX ON audio_embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = {num_lists});')
     conn.commit()
 
 
@@ -60,6 +64,9 @@ def get_top3_similar_docs(query_embedding, video_name):
     embedding_array = np.array(query_embedding)
     cur = conn.cursor()
     # Get the top 3 most similar documents using the KNN <=> operator
-    cur.execute("SELECT video_name, time_stamp, frame_num FROM audio_embeddings where video_name = '{}' ORDER BY embedding <=> %s LIMIT 3".format(video_name), (embedding_array,))
+    cur.execute(
+        "SELECT video_name, time_stamp, frame_num FROM audio_embeddings where"
+        " video_name = '{}' ORDER BY embedding <=> %s LIMIT 3".format(
+            video_name), (embedding_array,))
     top3_docs = cur.fetchall()
     return top3_docs

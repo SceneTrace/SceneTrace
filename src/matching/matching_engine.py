@@ -33,9 +33,9 @@ def search_video(video_file):
     features = fe.compute_features(video_file, block_size=4)
     embeddings = features["embedding"]
     vector_detected_video = vc.get_video_name(embeddings)
-    print("Detected video for {} : {}".format(video_file, vector_detected_video))
+    print("**** Detected video for {} : {}".format(video_file, vector_detected_video))
     end = time.time()
-    print(f"Time taken to search video {video_file}: {end - start} seconds")
+    print(f"**** Time taken to search video {video_file}: {end - start} seconds")
     return vector_detected_video
 
 
@@ -58,14 +58,14 @@ def search_audio(video_file, video_name):
     lis = sorted(frequency_distribution, key=frequency_distribution.get, reverse=True)
     end = time.time()
     mode, count = stats.mode(np.array(res_mode))
-    print(f"starting frame is : {mode}")
+    print(f"**** starting frame is : {mode}")
     print(
         f"confidence score is : {frequency_distribution[lis[0]] / len(res_mode)}, {frequency_distribution[lis[1]] / len(res_mode)}, {frequency_distribution[lis[2]] / len(res_mode)}, {frequency_distribution[lis[3]] / len(res_mode)}, {frequency_distribution[lis[4]] / len(res_mode)}")
-    print(f"Time taken to search audio in the video : {video_file}: {end - start} seconds")
+    print(f"**** Time taken to search audio in the video : {video_file}: {end - start} seconds")
     return result
 
 
-def extract_features(video_file, store=False):
+def extract_video_features(video_file, store=False):
     features = fe.compute_features(video_file)
     vc.createTable(len(features["embedding"][0]))
     vc.insertEmbedding(features)
@@ -79,7 +79,6 @@ def extract_audio_features(video_file, store=False):
     features = afe.compute_features(video_file)
     ac.createTable()
     ac.insertEmbedding(features)
-    # ac.createIndex()
     output_file = os.path.join(OUTPUT_DIR,
                                "feature_vectors_audio_{}.csv".format(os.path.basename(video_file).split('.')[0]))
     if store:

@@ -47,9 +47,9 @@ def extract_audio_features_mfcc(video_path):
         maxi = max(maxi, np.max(temp))
         mini = min(mini, np.min(temp))
         np_array.append(temp)
-    for i, lis in enumerate(np_array):
-        np_array[i] = (lis - mini) / (maxi - mini)
-        np_array[i] = append_zeros(np_array[i], 100)
+    # for i, lis in enumerate(np_array):
+    #     np_array[i] = (lis - mini) / (maxi - mini)
+    #     np_array[i] = append_zeros(np_array[i], 100)
     return np_array
 
 
@@ -78,7 +78,7 @@ def extract_fft(video_path):
         magnitude = append_zeros(np.array(magnitude), 1470)
         np_array.append(magnitude)
 
-    np_array = normalize_np_array(np_array, mini, maxi)
+    # np_array = normalize_np_array(np_array, mini, maxi)
 
     return np_array
 
