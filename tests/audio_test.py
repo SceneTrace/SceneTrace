@@ -7,6 +7,8 @@ from src.constants import OUTPUT_DIR
 from src.preprocessing.utils import process_audio_from_video
 import numpy as np
 
+maxi = 0
+mini = 10**9
 
 def testing(video_file):
     video_name = os.path.basename(video_file)
@@ -46,8 +48,7 @@ def extract_audio_features_frame_wise(video_path):
     idx = 0
     num_frame = int(len(audio_time_series)/sr) * fps
     np_array = []
-    maxi = 0
-    mini = 10**9
+
     for start_sample_idx in range(0, len(audio_time_series), hop_length):
         # Extract the audio segment
         audio_segment = audio_time_series[start_sample_idx: start_sample_idx + hop_length]
@@ -59,8 +60,8 @@ def extract_audio_features_frame_wise(video_path):
         mini = min(mini, np.min(magnitude))
         np_array.append(np.max(magnitude))
 
-    for i, lis in enumerate(np_array):
-        np_array[i] = (lis - mini) / (maxi - mini)
+    # for i, lis in enumerate(np_array):
+    #     np_array[i] = (lis - mini) / (maxi - mini)
 
     return np_array
 
@@ -107,16 +108,14 @@ def extract_dwt_features(video_path):
 
 if __name__ == '__main__':
     # 12240
-    # np_store = testing("video6.mp4")
-    # np_queries = testing("video_6_1_filtered.mp4")
-    # offset = 12240
-    # print(max(np_query[1]))
-    # print(max(np_stored[12239]))
-    # for i in range(len(np_queries)):
-    #     np_query = np_queries[i]
-    #     np_array = np_store[i + offset -1]
-    #     diff = np_query - np_array
-    #     print(np_query)
+    np_store = testing("video7.mp4")
+    np_queries = testing("video7_1_modified.mp4")
+    offset = 870
+    for i in range(len(np_queries)):
+        np_query = np_queries[i]
+        np_array = np_store[i + offset + 10]
+        diff = np.mean(np.array(np_query) - np.array(np_array))
+        print(diff)
     # np_store = testing("video6.mp4")
     # np_queries = testing("video_6_1_filtered.mp4")
     # offset = 12240
@@ -126,13 +125,13 @@ if __name__ == '__main__':
     #     print(np_query[0])
     #     # diff = np_query - np_array
     #     # print(np.mean(np.abs(diff), axis=0))
-    np_store = extract_dwt_features("video6.mp4")
-    np_queries = extract_dwt_features("video_6_1_filtered.mp4")
-    offset = 12240
-    for i in range(len(np_queries)):
-        np_query = np_queries[i]
-        np_array = np_store[i + 300]
-        diff = np_query - np_array
-        print(np.mean(np.abs(diff), axis=0))
+    # np_store = extract_dwt_features("video6.mp4")
+    # np_queries = extract_dwt_features("video_6_1_filtered.mp4")
+    # offset = 12240
+    # for i in range(len(np_queries)):
+    #     np_query = np_queries[i]
+    #     np_array = np_store[i + 300]
+    #     diff = np_query - np_array
+    #     print(np.mean(np.abs(diff), axis=0))
 
 
