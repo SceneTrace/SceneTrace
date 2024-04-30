@@ -81,7 +81,7 @@ def stop_loading_screen(root):
     root.destroy()
 
 
-def create_media_player(vlc_instance, filepath):
+def create_media_player(vlc_instance, filepath, start_frame=0):
     player = vlc_instance.media_player_new()
     media = vlc_instance.media_new(filepath)
     player.set_media(media)
@@ -100,7 +100,7 @@ def setup_window(player, video_canvas):
         player.set_xwindow(video_canvas.winfo_id())
 
 
-def play_video(vlc_instance, filepath, start_frame=0):
+def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callback=None):
     def configure_style():
         style = ttk.Style()
         style.configure('Info.TLabel', font=('Helvetica', 12), anchor="w")  # Increased font and left-align
@@ -118,7 +118,8 @@ def play_video(vlc_instance, filepath, start_frame=0):
     def close_player(new_query=False):
         player.stop()
         video_window.destroy()
-        return new_query
+        if callback:
+            callback(new_query)
 
     def toggle_play_pause():
         if player.is_playing():
@@ -136,7 +137,7 @@ def play_video(vlc_instance, filepath, start_frame=0):
     video_window.title("Video Player")
     configure_style()  # Apply the style configuration
 
-    player = create_media_player(vlc_instance, filepath)
+    player = create_media_player(vlc_instance=vlc_instance, filepath=filepath, start_frame=start_frame)
     video_canvas = tk.Canvas(video_window, bg='black', height=300, width=1500)
     video_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
     setup_window(player, video_canvas)
@@ -148,7 +149,8 @@ def play_video(vlc_instance, filepath, start_frame=0):
     # Labels with left alignment and larger fonts
     tk.Label(info_frame, text=f"Video: {os.path.basename(filepath)}", anchor='w', font=('Helvetica', 12)).pack(fill='x')
     tk.Label(info_frame, text=f"Start Frame: {start_frame}", anchor='w', font=('Helvetica', 12)).pack(fill='x')
-    tk.Label(info_frame, text="Processing Time: 30s", anchor='w', font=('Helvetica', 12)).pack(fill='x')
+    tk.Label(info_frame, text=f"Processing Time: {processing_time:0.03f}s", anchor='w', font=('Helvetica', 12)).pack(
+        fill='x')
 
     button_frame = tk.Frame(info_frame)
     button_frame.pack(pady=10, anchor='w')

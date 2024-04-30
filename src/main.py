@@ -1,5 +1,6 @@
 import os
 import argparse
+from time import perf_counter
 
 from constants import OUTPUT_DIR
 import tkinter as tk
@@ -59,22 +60,38 @@ if __name__ == "__main__":
     # Parse command line arguments
     args = parse_args()
     if args.player:
-        continue_playing = True
-        while continue_playing:
+        continue_playing = [True]
+
+        def callback(new_query):
+            continue_playing.clear()
+            continue_playing.append(new_query)
+
+        while continue_playing[0]:
 
             # File selection
-            filepath = video_player.file_selection()
+            query_video = video_player.file_selection()
             vlc_instance = video_player.setup_player()
 
-            if filepath:
+            if query_video:
                 # Create a new window for loading
                 loading_root = tk.Tk()
                 loading_root.title(constants.APP_NAME)
-                video_player.start_loading_screen(loading_root)  # Start the loading animation
-                loading_root.after(1000, lambda: video_player.stop_loading_screen(loading_root))
+                video_player.start_loading_screen(loading_root)  # Start the processing text animation
+
+                start_time = perf_counter()
+
+                # TODO: Simulate processing, replace with search
+                loading_root.after(3000, lambda: video_player.stop_loading_screen(loading_root))
                 loading_root.mainloop()
 
-                continue_playing = video_player.play_video(vlc_instance, filepath)  # Play the video in a new window
+                # TODO: Call function to stop loading here instead, after the search is complete
+                process_time = perf_counter() - start_time
+
+                # TODO: Replace query video path and start_frame with the search result
+                video_player.play_video(vlc_instance=vlc_instance, filepath=query_video,
+                                        start_frame=1000,
+                                        processing_time=process_time,
+                                        callback=callback)
             else:
                 continue_playing = False  # Exit the loop if no file is selected
     else:
