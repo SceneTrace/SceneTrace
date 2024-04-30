@@ -137,14 +137,14 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
     video_window.title("Video Player")
     configure_style()  # Apply the style configuration
 
-    player = create_media_player(vlc_instance=vlc_instance, filepath=filepath, start_frame=start_frame)
-    video_canvas = tk.Canvas(video_window, bg='black', height=300, width=1500)
-    video_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    player = create_media_player(vlc_instance, filepath, start_frame)
+    video_canvas = tk.Canvas(video_window, bg='black', height=720, width=1280)  # 16:9 aspect ratio
+    video_canvas.grid(row=0, column=0, padx=30, pady=(30, 10), sticky="nsew")  # Add padding
     setup_window(player, video_canvas)
 
     # Info and button frame
-    info_frame = tk.Frame(video_window, width=200)
-    info_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=20, pady=20)
+    info_frame = tk.Frame(video_window)
+    info_frame.grid(row=0, column=1, rowspan=2, padx=10, pady=300, sticky="nsew")
 
     # Labels with left alignment and larger fonts
     tk.Label(info_frame, text=f"Video: {os.path.basename(filepath)}", anchor='w', font=('Helvetica', 12)).pack(fill='x')
@@ -165,18 +165,21 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
 
     # Control frame with buttons and progress bar
     control_frame = tk.Frame(video_window)
-    control_frame.pack(side=tk.BOTTOM, fill=tk.X)
+    control_frame.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=20, pady=10)
+
     res_path = os.path.join(os.path.dirname(__file__), "res")
     play_image = tk.PhotoImage(file=os.path.join(res_path, "play.png"))
     pause_image = tk.PhotoImage(file=os.path.join(res_path, "pause.png"))
     stop_image = tk.PhotoImage(file=os.path.join(res_path, "stop.png"))
     toggle_button = tk.Button(control_frame, image=pause_image,
                               command=lambda: toggle_play_pause())
-    toggle_button.pack(side=tk.LEFT, padx=5, pady=5)
+    toggle_button.pack(side=tk.LEFT, padx=10)
+
     tk.Button(control_frame, image=stop_image, command=lambda: stop_video()).pack(side=tk.LEFT,
-                                                                                  padx=5, pady=5)
-    progress = ttk.Progressbar(control_frame, length=500, mode='determinate')
-    progress.pack(side=tk.LEFT, padx=10, pady=10, fill=tk.X, expand=True)
+                                                                                  padx=10)
+
+    progress = ttk.Progressbar(control_frame, length=1180, mode='determinate')  # Adjust length
+    progress.pack(side=tk.LEFT, padx=10, fill=tk.X)
 
     update_progress()
 
