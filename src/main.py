@@ -1,4 +1,3 @@
-import os
 import argparse
 from time import perf_counter
 
@@ -7,9 +6,14 @@ import tkinter as tk
 
 from src import constants
 from src.player import video_player
+import os
+import time
 
+from constants import OUTPUT_DIR
+from matching.matching_engine import load_vectors, extract_video_features, extract_audio_features, search_audio, search_video
+from src.db import audio_client as ac
+from src.db import video_client as vc
 from utils.file_utils import files_in_directory, fetch_files
-from matching.matching_engine import load_vectors, search_video, extract_features
 
 
 def load(file_path):
@@ -18,22 +22,43 @@ def load(file_path):
     for file in csv_files:
         print("Loading features from {}".format(file))
         load_vectors(file)
+    vc.createIndex()
 
 
-def extract(file_path, store=False):
+def extract(file_path, store=False, video=False, audio=False):
     # Extract features from the video files
+    print(" Video Features: {} ; Audio Features: {}".format(video, audio))
     video_files = files_in_directory(file_path, format=".mp4")
     for video_file in video_files:
-        print("Extracting features from {}".format(video_file))
-        extract_features(video_file, store=store)
+        print("#" * 80)
+        print("**** Extracting features from {}".format(video_file))
+        if video:
+            extract_video_features(video_file, store=store)
+        if audio:
+            extract_audio_features(video_file, store=store)
+    if video:
+        start = time.time()
+        vc.createIndex()
+        end = time.time()
+        print("Creating index for audio vectors took {} seconds".format(end - start))
+    if audio:
+        start = time.time()
+        ac.createIndex()
+        end = time.time()
+        print("Creating index for video vectors took {} seconds".format(end - start))
 
 
 def search(file_path):
     # Search the query video in the database
     video_files = files_in_directory(file_path, format=".mp4")
     for video_file in video_files:
-        print("Searching video {}".format(video_file))
-        search_video(video_file)
+        print("#"*80)
+        start = time.time()
+        print("For video {}".format(video_file))
+        video_name = search_video(video_file)
+        search_audio(video_file, video_name)
+        end = time.time()
+        print("Searching video {} took {} seconds".format(video_file, end-start))
 
 
 def validate_args(arguments):
@@ -50,15 +75,24 @@ def parse_args():
                         default=OUTPUT_DIR)
     parser.add_argument("--store", action="store_true", help="store the vectors")
     parser.add_argument("--player", action="store_true", help="Play video using player")
+    parser.add_argument("--video", action="store_true", help="extract video vectors")
+    parser.add_argument("--audio", action="store_true", help="extract audio vectors")
     parser.add_argument('inputs', nargs='*', help='Optional list of extra arguments without tags')
     arguments = parser.parse_args()
-    # validate_args(arguments)
+    #validate_args(arguments)
+    if arguments.store:
+        if not os.path.exists(arguments.output_dir):
+            os.makedirs(arguments.output_dir)
+    if not arguments.video and not arguments.audio:
+        arguments.video = True
+        arguments.audio = True
     return arguments
 
 
 if __name__ == "__main__":
     # Parse command line arguments
     args = parse_args()
+    
     if args.player:
         continue_playing = [True]
 
@@ -95,12 +129,9 @@ if __name__ == "__main__":
             else:
                 continue_playing = False  # Exit the loop if no file is selected
     else:
-        match args.action.lower():
-            case "load":
-                load(args.inputs[0])
-            case "extract":
-                extract(args.inputs[0], store=args.store)
-            case "search":
-                search(args.inputs[0])
-            case _:
-                raise ValueError("Invalid action. Please provide a valid action: Load, Extract, Search")
+        if args.action.lower() == "load":
+        load(args.inputs[0])
+    elif args.action.lower() == "extract":
+        extract(args.inputs[0], store=args.store, video=args.video, audio=args.audio)
+    elif args.action.lower() == "search":
+        search(args.inputs[0])
