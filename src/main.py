@@ -1,4 +1,11 @@
 import argparse
+from time import perf_counter
+
+from constants import OUTPUT_DIR
+import tkinter as tk
+
+from src import constants
+from src.player import video_player
 import os
 import time
 
@@ -67,11 +74,12 @@ def parse_args():
     parser.add_argument("--output-dir", type=str, required=False, help="Name of the video file.",
                         default=OUTPUT_DIR)
     parser.add_argument("--store", action="store_true", help="store the vectors")
+    parser.add_argument("--player", action="store_true", help="Play video using player")
     parser.add_argument("--video", action="store_true", help="extract video vectors")
     parser.add_argument("--audio", action="store_true", help="extract audio vectors")
     parser.add_argument('inputs', nargs='*', help='Optional list of extra arguments without tags')
     arguments = parser.parse_args()
-    validate_args(arguments)
+    #validate_args(arguments)
     if arguments.store:
         if not os.path.exists(arguments.output_dir):
             os.makedirs(arguments.output_dir)
@@ -84,11 +92,46 @@ def parse_args():
 if __name__ == "__main__":
     # Parse command line arguments
     args = parse_args()
-    if args.action.lower() == "load":
+    
+    if args.player:
+        continue_playing = [True]
+
+        def callback(new_query):
+            continue_playing.clear()
+            continue_playing.append(new_query)
+
+        while continue_playing[0]:
+
+            # File selection
+            query_video = video_player.file_selection()
+            vlc_instance = video_player.setup_player()
+
+            if query_video:
+                # Create a new window for loading
+                loading_root = tk.Tk()
+                loading_root.title(constants.APP_NAME)
+                video_player.start_loading_screen(loading_root)  # Start the processing text animation
+
+                start_time = perf_counter()
+
+                # TODO: Simulate processing, replace with search
+                loading_root.after(3000, lambda: video_player.stop_loading_screen(loading_root))
+                loading_root.mainloop()
+
+                # TODO: Call function to stop loading here instead, after the search is complete
+                process_time = perf_counter() - start_time
+
+                # TODO: Replace query video path and start_frame with the search result
+                video_player.play_video(vlc_instance=vlc_instance, filepath=query_video,
+                                        start_frame=1000,
+                                        processing_time=process_time,
+                                        callback=callback)
+            else:
+                continue_playing = False  # Exit the loop if no file is selected
+    else:
+        if args.action.lower() == "load":
         load(args.inputs[0])
     elif args.action.lower() == "extract":
         extract(args.inputs[0], store=args.store, video=args.video, audio=args.audio)
     elif args.action.lower() == "search":
         search(args.inputs[0])
-    else:
-        raise ValueError("Invalid action. Please provide a valid action: Load, Extract, Search")
