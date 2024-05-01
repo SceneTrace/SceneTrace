@@ -3,14 +3,14 @@ from sys import platform
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
-from src import constants
+from src.constants import APP_NAME, VID_WIDTH, VID_HEIGHT
 from src.gui.custom_player import CustomVideoPlayer
 
 
 def file_selection():
     # Initialize the main root window for each iteration
     root = tk.Tk()
-    root.title(constants.APP_NAME)
+    root.title(APP_NAME)
 
     # Label to instruct the user
     label = tk.Label(root, text="Please select a video file:", font=("Helvetica", 14))
@@ -86,8 +86,6 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
                 progress['value'] = percentage
         video_window.after(1000, update_progress)
 
-
-
     def close_player(new_query=False):
         """Stops the player and closes the window, possibly triggering a callback."""
         video_player.stop()
@@ -110,10 +108,10 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
         toggle_button.config(image=play_image)
 
     video_window = tk.Tk()
-    video_window.title("Video Player")
+    video_window.title(APP_NAME)
     configure_style()  # Apply the style configuration
 
-    video_canvas = tk.Canvas(video_window, bg='black', height=176, width=144)  # 16:9 aspect ratio
+    video_canvas = tk.Canvas(video_window, bg='black', width=VID_WIDTH, height=VID_HEIGHT)
     video_canvas.grid(row=0, column=0, padx=30, pady=(30, 10), sticky="nsew")
 
     video_player = CustomVideoPlayer(vlc_instance, filepath, video_canvas, start_frame)
@@ -125,7 +123,8 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
 
     ttk.Label(info_frame, text=f"Video: {os.path.basename(filepath)}", style='Info.TLabel').pack(fill='x', pady=10)
     ttk.Label(info_frame, text=f"Start Frame: {start_frame}", style='Info.TLabel').pack(fill='x', pady=10)
-    ttk.Label(info_frame, text=f"Processing Time: {processing_time:0.03f}s", style='Info.TLabel').pack(fill='x', pady=10)
+    ttk.Label(info_frame, text=f"Processing Time: {processing_time:0.03f}s", style='Info.TLabel').pack(fill='x',
+                                                                                                       pady=10)
 
     button_frame = tk.Frame(info_frame)
     button_frame.pack(pady=10, anchor='w')

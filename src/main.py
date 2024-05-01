@@ -4,12 +4,11 @@ from time import perf_counter
 from constants import OUTPUT_DIR
 import tkinter as tk
 
-from src import constants
 from src.gui import gui
 import os
 import time
 
-from constants import OUTPUT_DIR
+from constants import OUTPUT_DIR, APP_NAME
 from matching.matching_engine import load_vectors, extract_video_features, extract_audio_features, search_audio, \
     search_video
 from src.db import audio_client as ac
@@ -113,7 +112,7 @@ if __name__ == "__main__":
             if query_video:
                 # Create a new window for loading
                 loading_root = tk.Tk()
-                loading_root.title(constants.APP_NAME)
+                loading_root.title(APP_NAME)
                 gui.start_loading_screen(loading_root)  # Start the processing text animation
 
                 start_time = perf_counter()
