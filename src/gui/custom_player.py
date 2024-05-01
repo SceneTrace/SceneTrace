@@ -19,7 +19,6 @@ class CustomVideoPlayer:
         options = [
             '--no-xlib',  # This tells VLC not to use Xlib for video output, which can disable VAAPI
             '--avcodec-hw=none',  # Explicitly disable any hardware decoding
-            '--vout=flaschen',  # Use software rendering
         ]
         return vlc.Instance(options)
 
@@ -37,13 +36,10 @@ class CustomVideoPlayer:
     def setup_window(self):
         """Assigns the video output to the correct system interface based on the operating system."""
         if platform == "win32":
-            self.video_canvas.winfo_toplevel().state('zoomed')
             self.player.set_hwnd(self.video_canvas.winfo_id())
         elif platform == "darwin":
-            self.video_canvas.winfo_toplevel().tk.call("wm", "attributes", ".", "-zoomed", "1")
             self.player.set_nsobject(self.video_canvas.winfo_id())
         else:
-            self.video_canvas.winfo_toplevel().attributes('-zoomed', True)
             self.player.set_xwindow(self.video_canvas.winfo_id())
 
     def play(self):
@@ -57,6 +53,10 @@ class CustomVideoPlayer:
     def stop(self):
         """Stops the video playback and resets the player."""
         self.player.stop()
+
+    def release(self):
+        """Releases the player resources."""
+        self.player.release()
 
     def seek(self, forward=True):
         """Seeks the video forward or backward by a given number of seconds."""

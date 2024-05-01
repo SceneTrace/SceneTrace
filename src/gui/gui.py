@@ -1,5 +1,4 @@
 import os
-from sys import platform
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
@@ -20,8 +19,8 @@ def file_selection():
     root.columnconfigure(0, weight=1)  # Allows column to expand and fill space
 
     # Label and entry for video file selection
-    video_label = ttk.Label(root, text="Please select a video file (.mp4):", font=("Helvetica", 14))
-    video_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+    video_label = ttk.Label(root, text="Please select Query video (.mp4):", font=("Helvetica", 14))
+    video_label.grid(row=0, column=0, padx=10, pady=(15, 5), sticky="w")
 
     video_entry = ttk.Entry(root, width=50)
     video_entry.grid(row=1, column=0, padx=10, pady=5, sticky="we")
@@ -31,7 +30,7 @@ def file_selection():
     video_browse_button.grid(row=1, column=1, padx=10, pady=5, sticky="w")
 
     # Label and entry for audio file selection
-    audio_label = ttk.Label(root, text="Please select an audio file (.wav):", font=("Helvetica", 14))
+    audio_label = ttk.Label(root, text="Please select Query audio (.wav):", font=("Helvetica", 14))
     audio_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
 
     audio_entry = ttk.Entry(root, width=50)
@@ -95,10 +94,15 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
         style = ttk.Style()
         style.configure('Info.TLabel', font=('Helvetica', 12), anchor="w")
         style.configure('Info.TButton', font=('Helvetica', 12))
+        style.configure('Flat.TButton', relief='flat', borderwidth=0, focuscolor='')
         style.configure('LargeFont.TCombobox',
                         font=('Helvetica', 14),
                         arrowsize=15,
                         padding=5)
+        style.theme_use('clam')  # Using the 'clam' theme as a base for customization
+        style.configure("Modern.Horizontal.TProgressbar", troughcolor='lightgrey',
+                        bordercolor='grey', lightcolor='lightgrey', darkcolor='grey',
+                        background='steelblue', thickness=5)
 
     def update_progress():
         """Updates the progress bar based on the video's current playback state."""
@@ -113,6 +117,7 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
     def close_player(new_query=False):
         """Stops the player and closes the window, possibly triggering a callback."""
         video_player.stop()
+        video_player.release()
         video_window.destroy()
         if callback:
             callback(new_query)
@@ -135,6 +140,9 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
     video_window.title(APP_NAME)
     configure_style()  # Apply the style configuration
 
+    # Bind the window close button event to the on_closing function
+    video_window.protocol("WM_DELETE_WINDOW", lambda: close_player(False))
+
     video_canvas = tk.Canvas(video_window, bg='black', width=VID_WIDTH, height=VID_HEIGHT)
     video_canvas.grid(row=0, column=0, padx=30, pady=(30, 10), sticky="nsew")
 
@@ -143,7 +151,7 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
 
     # Info and button frame
     info_frame = tk.Frame(video_window)
-    info_frame.grid(row=0, column=1, rowspan=2, padx=10, pady=300, sticky="nsew")
+    info_frame.grid(row=0, column=1, rowspan=2, padx=10, pady=150, sticky="nsew")
 
     ttk.Label(info_frame, text=f"Video: {os.path.basename(filepath)}", style='Info.TLabel').pack(fill='x', pady=10)
     ttk.Label(info_frame, text=f"Start Frame: {start_frame}", style='Info.TLabel').pack(fill='x', pady=10)
@@ -161,7 +169,7 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
     exit_button.pack(side=tk.LEFT, padx=10)
 
     control_frame = tk.Frame(video_window)
-    control_frame.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=20, pady=10)
+    control_frame.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=20, pady=(0, 10))
 
     res_path = os.path.join(os.path.dirname(__file__), "res")
     play_image = tk.PhotoImage(file=os.path.join(res_path, "play.png"))
@@ -170,19 +178,19 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
     seek_forward_image = tk.PhotoImage(file=os.path.join(res_path, "seek_forward.png"))
     seek_backward_image = tk.PhotoImage(file=os.path.join(res_path, "seek_backward.png"))
 
-    toggle_button = tk.Button(control_frame, image=pause_image, command=toggle_play_pause)
+    toggle_button = ttk.Button(control_frame, image=pause_image, command=toggle_play_pause, style='Flat.TButton')
     toggle_button.pack(side=tk.LEFT, padx=10)
 
-    tk.Button(control_frame, image=stop_image, command=stop_video).pack(side=tk.LEFT, padx=10)
+    ttk.Button(control_frame, image=stop_image, command=stop_video, style='Flat.TButton').pack(side=tk.LEFT, padx=10)
 
     # Button for seeking backward
-    seek_back_button = ttk.Button(control_frame, image=seek_backward_image,
+    seek_back_button = ttk.Button(control_frame, image=seek_backward_image, style='Flat.TButton',
                                   command=lambda: video_player.seek(forward=False))
     seek_back_button.image = seek_backward_image  # Keep a reference to prevent garbage collection
     seek_back_button.pack(side=tk.LEFT, padx=10)
 
     # Button for seeking forward
-    seek_forward_button = ttk.Button(control_frame, image=seek_forward_image,
+    seek_forward_button = ttk.Button(control_frame, image=seek_forward_image, style='Flat.TButton',
                                      command=lambda: video_player.seek(forward=True))
     seek_forward_button.image = seek_forward_image  # Keep a reference to prevent garbage collection
     seek_forward_button.pack(side=tk.LEFT, padx=10)
@@ -194,8 +202,9 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
     speed_combobox.bind("<<ComboboxSelected>>", lambda event: video_player.change_playback_speed(speed_combobox.get()))
     speed_combobox.pack(side=tk.LEFT, padx=10)
 
-    progress = ttk.Progressbar(control_frame, length=1000, mode='determinate')
-    progress.pack(side=tk.LEFT, padx=10, fill=tk.X)
+    progress = ttk.Progressbar(control_frame, style="Modern.Horizontal.TProgressbar",
+                               orient="horizontal", length=400, mode='determinate', maximum=100)
+    progress.pack(side=tk.LEFT, padx=10, pady=20, fill=tk.X)
 
     update_progress()
 
