@@ -106,10 +106,10 @@ if __name__ == "__main__":
         while continue_playing[0]:
 
             # File selection
-            query_video = gui.file_selection()
+            query_video, query_audio = gui.file_selection()
             vlc_instance = CustomVideoPlayer.setup_vlc_instance()
 
-            if query_video:
+            if query_video and query_audio:
                 # Create a new window for loading
                 loading_root = tk.Tk()
                 loading_root.title(APP_NAME)
@@ -126,7 +126,7 @@ if __name__ == "__main__":
 
                 # TODO: Replace query video path and start_frame with the search result
                 gui.play_video(vlc_instance=vlc_instance, filepath=query_video,
-                               start_frame=150,
+                               start_frame=16200,
                                processing_time=process_time,
                                callback=callback)
             else:

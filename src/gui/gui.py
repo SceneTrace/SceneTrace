@@ -12,37 +12,57 @@ def file_selection():
     root = tk.Tk()
     root.title(APP_NAME)
 
-    # Label to instruct the user
-    label = tk.Label(root, text="Please select a video file:", font=("Helvetica", 14))
-    label.pack(padx=10, pady=5)  # Add padding around the label
+    # Configure styles for ttk widgets
+    style = ttk.Style()
+    style.configure("Large.TButton", font=('Helvetica', 16))  # Define a large Button style
 
-    # Entry widget to display the file path
-    entry_file = tk.Entry(root, width=50)
-    entry_file.pack(side=tk.LEFT, padx=10, pady=5)  # Add padding around the entry
+    # Configure the grid layout manager
+    root.columnconfigure(0, weight=1)  # Allows column to expand and fill space
 
-    # Function to open a file dialog and update the entry with the selected file path
-    def browse_file():
-        filepath = filedialog.askopenfilename(filetypes=(("Video Files", "*.mp4"),))
-        entry_file.delete(0, tk.END)
-        entry_file.insert(0, filepath)
+    # Label and entry for video file selection
+    video_label = ttk.Label(root, text="Please select a video file (.mp4):", font=("Helvetica", 14))
+    video_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
 
-    # Button to trigger the file browsing function
-    browse_button = tk.Button(root, text="Browse", command=browse_file)
-    browse_button.pack(side=tk.LEFT, pady=5)  # Add padding around the button
+    video_entry = ttk.Entry(root, width=50)
+    video_entry.grid(row=1, column=0, padx=10, pady=5, sticky="we")
 
-    # Button to load the video file and close the file selection window
+    # Button to trigger video file browsing
+    video_browse_button = ttk.Button(root, text="Browse Video", command=lambda: browse_file(video_entry, "mp4"))
+    video_browse_button.grid(row=1, column=1, padx=10, pady=5, sticky="w")
+
+    # Label and entry for audio file selection
+    audio_label = ttk.Label(root, text="Please select an audio file (.wav):", font=("Helvetica", 14))
+    audio_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
+
+    audio_entry = ttk.Entry(root, width=50)
+    audio_entry.grid(row=3, column=0, padx=10, pady=5, sticky="we")
+
+    # Button to trigger audio file browsing
+    audio_browse_button = ttk.Button(root, text="Browse Audio", command=lambda: browse_file(audio_entry, "wav"))
+    audio_browse_button.grid(row=3, column=1, padx=10, pady=5, sticky="w")
+
+    # Generic file browsing function
+    def browse_file(entry, filetype):
+        filetypes = {"mp4": ("Video Files", "*.mp4"), "wav": ("Audio Files", "*.wav")}
+        filepath = filedialog.askopenfilename(filetypes=(filetypes[filetype],))
+        entry.delete(0, tk.END)
+        entry.insert(0, filepath)
+
+    # Button to load the video and audio files and close the file selection window
     def on_load():
-        if entry_file.get():  # Ensure something is entered
-            root.video_path = entry_file.get()
+        if video_entry.get() and audio_entry.get():  # Ensure both files are selected
+            root.video_path = video_entry.get()
+            root.audio_path = audio_entry.get()
             root.quit()  # Close the window
 
-    load_button = tk.Button(root, text="Load", command=on_load)
-    load_button.pack(padx=10, pady=5)  # Add padding around the load button
+    load_button = ttk.Button(root, text="Load", command=on_load, style="Large.TButton")
+    load_button.grid(row=4, column=0, columnspan=2, padx=10, pady=20)
 
     root.mainloop()
-    filepath = root.video_path if hasattr(root, 'video_path') else None
+    video_path = root.video_path if hasattr(root, 'video_path') else None
+    audio_path = root.audio_path if hasattr(root, 'audio_path') else None
     root.destroy()  # Destroy the window after the loop ends
-    return filepath
+    return video_path, audio_path
 
 
 def start_loading_screen(root):
