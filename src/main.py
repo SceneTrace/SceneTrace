@@ -115,12 +115,13 @@ if __name__ == "__main__":
                 loading_root = tk.Tk()
                 loading_root.title(constants.APP_NAME)
                 gui.start_loading_screen(loading_root)  # Start the processing text animation
+                loading_root.mainloop()
 
                 start_time = perf_counter()
 
                 # TODO: Simulate processing, replace with search
                 loading_root.after(3000, lambda: gui.stop_loading_screen(loading_root))
-                loading_root.mainloop()
+
 
                 # TODO: Call function to stop loading here instead, after the search is complete
                 process_time = perf_counter() - start_time
