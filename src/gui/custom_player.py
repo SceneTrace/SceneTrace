@@ -2,7 +2,7 @@ import math
 
 import vlc
 from sys import platform
-from src.constants import FPS
+from src.constants import FPS, SEEK_SECONDS
 
 
 class CustomVideoPlayer:
@@ -57,6 +57,14 @@ class CustomVideoPlayer:
     def stop(self):
         """Stops the video playback and resets the player."""
         self.player.stop()
+
+    def seek(self, forward=True):
+        """Seeks the video forward or backward by a given number of seconds."""
+        if self.player.is_playing():
+            # Calculate the seek time based on direction
+            seek_time = (SEEK_SECONDS if forward else -SEEK_SECONDS) * 1000
+            current_time = self.player.get_time() + seek_time
+            self.player.set_time(current_time)
 
     def is_playing(self):
         """Checks if the video is currently playing."""

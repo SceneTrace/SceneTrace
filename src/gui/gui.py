@@ -86,6 +86,8 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
                 progress['value'] = percentage
         video_window.after(1000, update_progress)
 
+
+
     def close_player(new_query=False):
         """Stops the player and closes the window, possibly triggering a callback."""
         video_player.stop()
@@ -111,7 +113,7 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
     video_window.title("Video Player")
     configure_style()  # Apply the style configuration
 
-    video_canvas = tk.Canvas(video_window, bg='black', height=720, width=1280)  # 16:9 aspect ratio
+    video_canvas = tk.Canvas(video_window, bg='black', height=176, width=144)  # 16:9 aspect ratio
     video_canvas.grid(row=0, column=0, padx=30, pady=(30, 10), sticky="nsew")
 
     video_player = CustomVideoPlayer(vlc_instance, filepath, video_canvas, start_frame)
@@ -142,13 +144,27 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
     play_image = tk.PhotoImage(file=os.path.join(res_path, "play.png"))
     pause_image = tk.PhotoImage(file=os.path.join(res_path, "pause.png"))
     stop_image = tk.PhotoImage(file=os.path.join(res_path, "stop.png"))
+    seek_forward_image = tk.PhotoImage(file=os.path.join(res_path, "seek_forward.png"))
+    seek_backward_image = tk.PhotoImage(file=os.path.join(res_path, "seek_backward.png"))
 
     toggle_button = tk.Button(control_frame, image=pause_image, command=toggle_play_pause)
     toggle_button.pack(side=tk.LEFT, padx=10)
 
     tk.Button(control_frame, image=stop_image, command=stop_video).pack(side=tk.LEFT, padx=10)
 
-    progress = ttk.Progressbar(control_frame, length=1180, mode='determinate')
+    # Button for seeking backward
+    seek_back_button = ttk.Button(control_frame, image=seek_backward_image,
+                                  command=lambda: video_player.seek(forward=False))
+    seek_back_button.image = seek_backward_image  # Keep a reference to prevent garbage collection
+    seek_back_button.pack(side=tk.LEFT, padx=10)
+
+    # Button for seeking forward
+    seek_forward_button = ttk.Button(control_frame, image=seek_forward_image,
+                                     command=lambda: video_player.seek(forward=True))
+    seek_forward_button.image = seek_forward_image  # Keep a reference to prevent garbage collection
+    seek_forward_button.pack(side=tk.LEFT, padx=10)
+
+    progress = ttk.Progressbar(control_frame, length=1000, mode='determinate')
     progress.pack(side=tk.LEFT, padx=10, fill=tk.X)
 
     update_progress()
