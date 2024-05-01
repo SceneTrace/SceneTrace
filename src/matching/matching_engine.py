@@ -24,7 +24,8 @@ def load_vectors(csv_file):
     temp_df = pd.DataFrame()
     temp_df["embedding"] = res
     df["embedding"] = temp_df["embedding"]
-    vc.createTable(df["embedding"].size())
+    size = len(df["embedding"][1])
+    vc.createTable(size)
     vc.insertEmbedding(df)
 
 
