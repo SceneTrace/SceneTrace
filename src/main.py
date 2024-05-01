@@ -1,7 +1,6 @@
 import argparse
 from time import perf_counter
 
-from constants import OUTPUT_DIR
 import tkinter as tk
 
 from src.gui import gui
@@ -49,17 +48,16 @@ def extract(file_path, store=False, video=False, audio=False):
         print("Creating index for video vectors took {} seconds".format(end - start))
 
 
-def search(file_path):
+def search(video_file_path):
     # Search the query video in the database
-    video_files = files_in_directory(file_path, format=".mp4")
+    video_files = files_in_directory(video_file_path, format=".mp4")
     for video_file in video_files:
-        print("#" * 80)
+        print("#"*80)
         start = time.time()
-        print("For video {}".format(video_file))
-        video_name = search_video(video_file)
-        search_audio(video_file, video_name)
+        original_video_name = search_video(video_file)
+        frame_num = search_audio(video_file, original_video_name)
         end = time.time()
-        print("Searching video {} took {} seconds".format(video_file, end - start))
+        print("Searching video {} took {} seconds".format(video_file, end-start))
 
 
 def validate_args(arguments):
@@ -80,7 +78,7 @@ def parse_args():
     parser.add_argument("--audio", action="store_true", help="extract audio vectors")
     parser.add_argument('inputs', nargs='*', help='Optional list of extra arguments without tags')
     arguments = parser.parse_args()
-    # validate_args(arguments)
+    #validate_args(arguments)
     if arguments.store:
         if not os.path.exists(arguments.output_dir):
             os.makedirs(arguments.output_dir)

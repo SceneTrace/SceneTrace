@@ -1,7 +1,4 @@
-import time
-
 import numpy as np
-
 from src.db import video_client as vc
 from src.db import audio_client as ac
 from src.preprocessing import feature_extraction as fe
@@ -30,18 +27,14 @@ def load_vectors(csv_file):
 
 
 def search_video(video_file):
-    start = time.time()
     features = fe.compute_features(video_file, block_size=4)
     embeddings = features["embedding"]
     vector_detected_video = vc.get_video_name(embeddings)
-    print("**** Detected video for {} : {}".format(video_file, vector_detected_video))
-    end = time.time()
-    print(f"**** Time taken to search video {video_file}: {end - start} seconds")
+    # print("**** Detected video for {} : {}".format(video_file, vector_detected_video))
     return vector_detected_video
 
 
 def search_audio(video_file, video_name):
-    start = time.time()
     features = afe.compute_features(video_file)
     embeddings = features["embedding"]
     result = []
@@ -57,13 +50,14 @@ def search_audio(video_file, video_name):
         frequency_distribution[frame_detected] += 1
 
     lis = sorted(frequency_distribution, key=frequency_distribution.get, reverse=True)
-    end = time.time()
     mode, count = stats.mode(np.array(res_mode))
-    print(f"**** starting frame is : {mode}")
     print(
-        f"confidence score is : {frequency_distribution[lis[0]] / len(res_mode)}, {frequency_distribution[lis[1]] / len(res_mode)}, {frequency_distribution[lis[2]] / len(res_mode)}, {frequency_distribution[lis[3]] / len(res_mode)}, {frequency_distribution[lis[4]] / len(res_mode)}")
-    print(f"**** Time taken to search audio in the video : {video_file}: {end - start} seconds")
-    return result
+        f"confidence score is : {frequency_distribution[lis[0]] / len(res_mode)},"
+        f" {frequency_distribution[lis[1]] / len(res_mode)},"
+        f" {frequency_distribution[lis[2]] / len(res_mode)},"
+        f" {frequency_distribution[lis[3]] / len(res_mode)},"
+        f" {frequency_distribution[lis[4]] / len(res_mode)}")
+    return mode
 
 
 def extract_video_features(video_file, store=False):

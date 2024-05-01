@@ -109,10 +109,11 @@ def extract_audio_features(video_path, start_time_sec, end_time_sec=None):
                      np.mean(mfcc_threshold)])
 
 
-def compute_features(video_file, block_size=8):
-    start = time.time()
+def compute_features(video_file, block_size=8, normalize=False):
     video_name = os.path.basename(video_file)
     frames = extract_frames(video_file)
+
+
     vectors = []
     max_frequency = 0
     min_frequency = 10 ** 4
@@ -129,9 +130,11 @@ def compute_features(video_file, block_size=8):
         image = frame['image']
         if image is None:
             print(f'WARNING: Frame {i} has no image belonging to {video_name}')
+
         freq_vector = extract_freq_vectors(image, block_size=block_size)
         max_frequency = max(max_frequency, max(freq_vector))
         min_frequency = min(min_frequency, min(freq_vector))
+
         dom, variance = extract_color_features(image)
         max_dominant_colors = max(max_dominant_colors, max(dom))
         min_dominant_colors = min(min_dominant_colors, min(dom))
@@ -154,8 +157,5 @@ def compute_features(video_file, block_size=8):
         embed = list(np.concatenate((freq_vector, variance, dom), axis=0))
         vectors.append([video_name, start_timestamp, frame_id, embed])
         count += 1
-
     pandas_df = pd.DataFrame(vectors, columns=['video_name', 'time_stamp', 'frame_num', 'embedding'])
-    end = time.time()
-    print(f"Time taken to compute features for {video_name}: {end - start} seconds")
     return pandas_df
