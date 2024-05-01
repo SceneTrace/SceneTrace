@@ -10,7 +10,7 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
       - ./postgres/vector_extension.sql:/docker-entrypoint-initdb.d/0-vector_extension.sql
-      - ./postgres/postgresql.conf:/var/lib/postgresql/data
+      - ./postgres/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
