@@ -12,7 +12,7 @@ conn = psycopg2.connect(database="postgres",
                         port=5432)
 
 
-def createTable():
+def createTable(size=1570):
     cur = conn.cursor()
     cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
     register_vector(conn)

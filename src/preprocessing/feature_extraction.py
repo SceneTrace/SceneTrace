@@ -1,6 +1,8 @@
 import os
 import time
 
+from concurrent.futures import ThreadPoolExecutor
+
 import cv2
 import librosa
 import numpy as np
@@ -112,8 +114,6 @@ def extract_audio_features(video_path, start_time_sec, end_time_sec=None):
 def compute_features(video_file, block_size=8, normalize=False):
     video_name = os.path.basename(video_file)
     frames = extract_frames(video_file)
-
-
     vectors = []
     max_frequency = 0
     min_frequency = 10 ** 4
@@ -130,11 +130,9 @@ def compute_features(video_file, block_size=8, normalize=False):
         image = frame['image']
         if image is None:
             print(f'WARNING: Frame {i} has no image belonging to {video_name}')
-
         freq_vector = extract_freq_vectors(image, block_size=block_size)
         max_frequency = max(max_frequency, max(freq_vector))
         min_frequency = min(min_frequency, min(freq_vector))
-
         dom, variance = extract_color_features(image)
         max_dominant_colors = max(max_dominant_colors, max(dom))
         min_dominant_colors = min(min_dominant_colors, min(dom))
@@ -159,3 +157,44 @@ def compute_features(video_file, block_size=8, normalize=False):
         count += 1
     pandas_df = pd.DataFrame(vectors, columns=['video_name', 'time_stamp', 'frame_num', 'embedding'])
     return pandas_df
+
+
+def get_features_per_frame(video_name, frame_id, frame, block_size=8):
+    image = frame['image']
+    if image is None:
+        print(f'WARNING: Frame {frame_id} has no image belonging to {video_name}')
+        return []
+    freq_vector = extract_freq_vectors(image, block_size=block_size)
+    dom, variance = extract_color_features(image)
+    embed = list(np.concatenate((freq_vector, variance, dom), axis=0))
+    return [video_name, frame['start_timestamp'], frame['id'], embed]
+
+
+def compute_features_optimized(video_file, block_size=8):
+    time_start = time.time()
+    video_name = os.path.basename(video_file)
+    frames = extract_frames(video_file)
+    time_end = time.time()
+    print(f'Extracting frames took {time_end - time_start} seconds')
+    time_start = time.time()
+    vectors = process_video_frames(video_name, frames, block_size, 10)
+    pandas_df = pd.DataFrame(vectors, columns=['video_name', 'time_stamp', 'frame_num', 'embedding'])
+    time_end = time.time()
+    print(f'Computing features took {time_end - time_start} seconds')
+    return pandas_df
+
+
+def process_frame(args):
+    video_name, index, frame, block_size = args
+    return get_features_per_frame(video_name, index, frame, block_size)
+
+
+def process_video_frames(video_name, frames, block_size, num_threads):
+    num_frames = len(frames) - 1
+    args = [(video_name, i, frames[i], block_size) for i in range(0, num_frames, 30)]
+    vectors = []
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        vectors = list(executor.map(process_frame, args))
+    vectors = list(filter(lambda x: x != [], vectors))
+    return vectors
+

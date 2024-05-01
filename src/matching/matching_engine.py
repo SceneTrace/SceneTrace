@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from src.db import video_client as vc
 from src.db import audio_client as ac
@@ -11,7 +13,7 @@ from scipy import stats
 from collections import defaultdict
 
 
-def load_vectors(csv_file):
+def load_video_vectors(csv_file):
     df = pd.read_csv(csv_file)
     df["embedding"] = df["embedding"].astype(str)
     res = []
@@ -26,11 +28,29 @@ def load_vectors(csv_file):
     vc.insertEmbedding(df)
 
 
+def load_audio_vectors(csv_file):
+    df = pd.read_csv(csv_file)
+    df["embedding"] = df["embedding"].astype(str)
+    res = []
+    for i in df["embedding"]:
+        sd = json.loads(i)
+        res.append(sd)
+    temp_df = pd.DataFrame()
+    temp_df["embedding"] = res
+    df["embedding"] = temp_df["embedding"]
+    size = len(df["embedding"][1])
+    ac.createTable(size)
+    ac.insertEmbedding(df)
+
+
 def search_video(video_file):
-    features = fe.compute_features(video_file, block_size=4)
+    start = time.time()
+    features = fe.compute_features_optimized(video_file, block_size=4)
+    end = time.time()
+    print("**** Extracting features for {} took {} seconds".format(video_file, end - start))
     embeddings = features["embedding"]
     vector_detected_video = vc.get_video_name(embeddings)
-    # print("**** Detected video for {} : {}".format(video_file, vector_detected_video))
+    print("**** Detected video for {} : {}".format(video_file, vector_detected_video))
     return vector_detected_video
 
 
@@ -61,7 +81,7 @@ def search_audio(video_file, video_name):
 
 
 def extract_video_features(video_file, store=False):
-    features = fe.compute_features(video_file)
+    features = fe.compute_features_optimized(video_file)
     vc.createTable(len(features["embedding"][0]))
     vc.insertEmbedding(features)
     output_file = os.path.join(OUTPUT_DIR,

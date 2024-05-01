@@ -8,7 +8,7 @@ import os
 import time
 
 from constants import OUTPUT_DIR, APP_NAME
-from matching.matching_engine import load_vectors, extract_video_features, extract_audio_features, search_audio, \
+from matching.matching_engine import load_video_vectors, load_audio_vectors, extract_video_features, extract_audio_features, search_audio, \
     search_video
 from src.db import audio_client as ac
 from src.db import video_client as vc
@@ -20,9 +20,14 @@ def load(file_path):
     # Load the feature vectors
     csv_files = fetch_files(file_path, format=".csv")
     for file in csv_files:
-        print("Loading features from {}".format(file))
-        load_vectors(file)
+        if "audio" in file:
+            print("Loading audio features from {}".format(file))
+            load_audio_vectors(file)
+        else:
+            print("Loading video features from {}".format(file))
+            load_video_vectors(file)
     vc.createIndex()
+    ac.createIndex()
 
 
 def extract(file_path, store=False, video=False, audio=False):
@@ -40,12 +45,12 @@ def extract(file_path, store=False, video=False, audio=False):
         start = time.time()
         vc.createIndex()
         end = time.time()
-        print("Creating index for audio vectors took {} seconds".format(end - start))
+        print("Creating index for video vectors took {} seconds".format(end - start))
     if audio:
         start = time.time()
         ac.createIndex()
         end = time.time()
-        print("Creating index for video vectors took {} seconds".format(end - start))
+        print("Creating index for audio vectors took {} seconds".format(end - start))
 
 
 def search(video_file_path):
@@ -55,9 +60,15 @@ def search(video_file_path):
         print("#"*80)
         start = time.time()
         original_video_name = search_video(video_file)
+        video_end_time = time.time()
+        print("Searching video {} took {} seconds".format(video_file, video_end_time-start))
+        audio_start = time.time()
         frame_num = search_audio(video_file, original_video_name)
         end = time.time()
-        print("Searching video {} took {} seconds".format(video_file, end-start))
+        print("Searching audio for {} took {} seconds".format(video_file, end-audio_start))
+        print("Complete Search for {} took {} seconds".format(video_file, end-start))
+        print("*** VIDEO NAME: {} DETECTED : {}".format(video_file, original_video_name.replace(".", "_"+str(
+            frame_num-1)+".")))
 
 
 def validate_args(arguments):
