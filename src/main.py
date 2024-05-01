@@ -5,14 +5,16 @@ from constants import OUTPUT_DIR
 import tkinter as tk
 
 from src import constants
-from src.player import video_player
+from src.gui import gui
 import os
 import time
 
 from constants import OUTPUT_DIR
-from matching.matching_engine import load_vectors, extract_video_features, extract_audio_features, search_audio, search_video
+from matching.matching_engine import load_vectors, extract_video_features, extract_audio_features, search_audio, \
+    search_video
 from src.db import audio_client as ac
 from src.db import video_client as vc
+from src.gui.custom_player import CustomVideoPlayer
 from utils.file_utils import files_in_directory, fetch_files
 
 
@@ -52,13 +54,13 @@ def search(file_path):
     # Search the query video in the database
     video_files = files_in_directory(file_path, format=".mp4")
     for video_file in video_files:
-        print("#"*80)
+        print("#" * 80)
         start = time.time()
         print("For video {}".format(video_file))
         video_name = search_video(video_file)
         search_audio(video_file, video_name)
         end = time.time()
-        print("Searching video {} took {} seconds".format(video_file, end-start))
+        print("Searching video {} took {} seconds".format(video_file, end - start))
 
 
 def validate_args(arguments):
@@ -79,7 +81,7 @@ def parse_args():
     parser.add_argument("--audio", action="store_true", help="extract audio vectors")
     parser.add_argument('inputs', nargs='*', help='Optional list of extra arguments without tags')
     arguments = parser.parse_args()
-    #validate_args(arguments)
+    # validate_args(arguments)
     if arguments.store:
         if not os.path.exists(arguments.output_dir):
             os.makedirs(arguments.output_dir)
@@ -92,46 +94,48 @@ def parse_args():
 if __name__ == "__main__":
     # Parse command line arguments
     args = parse_args()
-    
+
     if args.player:
         continue_playing = [True]
+
 
         def callback(new_query):
             continue_playing.clear()
             continue_playing.append(new_query)
 
+
         while continue_playing[0]:
 
             # File selection
-            query_video = video_player.file_selection()
-            vlc_instance = video_player.setup_player()
+            query_video = gui.file_selection()
+            vlc_instance = CustomVideoPlayer.setup_vlc_instance()
 
             if query_video:
                 # Create a new window for loading
                 loading_root = tk.Tk()
                 loading_root.title(constants.APP_NAME)
-                video_player.start_loading_screen(loading_root)  # Start the processing text animation
+                gui.start_loading_screen(loading_root)  # Start the processing text animation
 
                 start_time = perf_counter()
 
                 # TODO: Simulate processing, replace with search
-                loading_root.after(3000, lambda: video_player.stop_loading_screen(loading_root))
+                loading_root.after(3000, lambda: gui.stop_loading_screen(loading_root))
                 loading_root.mainloop()
 
                 # TODO: Call function to stop loading here instead, after the search is complete
                 process_time = perf_counter() - start_time
 
                 # TODO: Replace query video path and start_frame with the search result
-                video_player.play_video(vlc_instance=vlc_instance, filepath=query_video,
-                                        start_frame=1000,
-                                        processing_time=process_time,
-                                        callback=callback)
+                gui.play_video(vlc_instance=vlc_instance, filepath=query_video,
+                               start_frame=150,
+                               processing_time=process_time,
+                               callback=callback)
             else:
                 continue_playing = False  # Exit the loop if no file is selected
     else:
         if args.action.lower() == "load":
-        load(args.inputs[0])
-    elif args.action.lower() == "extract":
-        extract(args.inputs[0], store=args.store, video=args.video, audio=args.audio)
-    elif args.action.lower() == "search":
-        search(args.inputs[0])
+            load(args.inputs[0])
+        elif args.action.lower() == "extract":
+            extract(args.inputs[0], store=args.store, video=args.video, audio=args.audio)
+        elif args.action.lower() == "search":
+            search(args.inputs[0])
