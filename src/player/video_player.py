@@ -85,6 +85,10 @@ def create_media_player(vlc_instance, filepath, start_frame=0):
     player = vlc_instance.media_player_new()
     media = vlc_instance.media_new(filepath)
     player.set_media(media)
+
+    # Set the start frame
+    media.add_option(f'start-time={int(start_frame / constants.FPS)}')  # Convert milliseconds to seconds
+
     return player
 
 
