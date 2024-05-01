@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<button onclick="setCurTime()" type="button">RESET</button><br>
+
+<video id="myVideo" controls>
+    <source src={{ url_for('static', filename=video_name) }} type="video/mp4">
+</video>
+
+<script>
+    let vid = document.getElementById("myVideo");
+    vid.currentTime={{off_set_time}};
+    function setCurTime() {
+        vid.currentTime={{off_set_time}};
+    }
+</script>
+
+
+</body>
+</html>

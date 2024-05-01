@@ -63,7 +63,7 @@ def search_audio(video_file, video_name):
     print(
         f"confidence score is : {frequency_distribution[lis[0]] / len(res_mode)}, {frequency_distribution[lis[1]] / len(res_mode)}, {frequency_distribution[lis[2]] / len(res_mode)}, {frequency_distribution[lis[3]] / len(res_mode)}, {frequency_distribution[lis[4]] / len(res_mode)}")
     print(f"**** Time taken to search audio in the video : {video_file}: {end - start} seconds")
-    return result
+    return mode
 
 
 def extract_video_features(video_file, store=False):
