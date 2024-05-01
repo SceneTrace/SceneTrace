@@ -66,6 +66,10 @@ class CustomVideoPlayer:
             current_time = self.player.get_time() + seek_time
             self.player.set_time(current_time)
 
+    def change_playback_speed(self, speed):
+        """Changes the playback speed of the video."""
+        self.player.set_rate(float(speed))
+
     def is_playing(self):
         """Checks if the video is currently playing."""
         return self.player.is_playing()

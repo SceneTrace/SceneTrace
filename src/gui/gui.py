@@ -74,7 +74,11 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
         """Configure the style of the GUI elements."""
         style = ttk.Style()
         style.configure('Info.TLabel', font=('Helvetica', 12), anchor="w")
-        style.configure('Info.TButton', font=('Helvetica', 10))
+        style.configure('Info.TButton', font=('Helvetica', 12))
+        style.configure('LargeFont.TCombobox',
+                        font=('Helvetica', 14),
+                        arrowsize=15,
+                        padding=5)
 
     def update_progress():
         """Updates the progress bar based on the video's current playback state."""
@@ -162,6 +166,13 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
                                      command=lambda: video_player.seek(forward=True))
     seek_forward_button.image = seek_forward_image  # Keep a reference to prevent garbage collection
     seek_forward_button.pack(side=tk.LEFT, padx=10)
+
+    # Speed selection combobox setup
+    speeds = [str(x) for x in [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]]
+    speed_combobox = ttk.Combobox(control_frame, values=speeds, state="readonly", style='LargeFont.TCombobox', width=5)
+    speed_combobox.set("1.0")  # Set default speed to normal (1.0x)
+    speed_combobox.bind("<<ComboboxSelected>>", lambda event: video_player.change_playback_speed(speed_combobox.get()))
+    speed_combobox.pack(side=tk.LEFT, padx=10)
 
     progress = ttk.Progressbar(control_frame, length=1000, mode='determinate')
     progress.pack(side=tk.LEFT, padx=10, fill=tk.X)
