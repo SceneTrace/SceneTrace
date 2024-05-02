@@ -14,19 +14,18 @@ from src.utils.np_util import append_zeros
 audio_time_series_dictionary = {}
 
 
-def load_audio(video_path):
-    audio_file_path = f'{OUTPUT_DIR}/{video_path.split("/")[-1].replace(".mp4", ".wav")}'
-    if video_path not in audio_time_series_dictionary.keys():
-        audio_time_series, sr = librosa.load(audio_file_path, sr=44100, mono=True)
-        audio_time_series_dictionary[video_path] = audio_time_series, sr
+def load_audio(audio_path):
+    if audio_path not in audio_time_series_dictionary.keys():
+        audio_time_series, sr = librosa.load(audio_path, sr=44100, mono=True)
+        audio_time_series_dictionary[audio_path] = audio_time_series, sr
     else:
-        audio_time_series, sr = audio_time_series_dictionary[video_path]
+        audio_time_series, sr = audio_time_series_dictionary[audio_path]
     return audio_time_series, sr
 
 
-def extract_audio_features_mfcc(video_path):
+def extract_audio_features_mfcc(audio_path):
     # Load the audio file with a sampling rate of 44.1 kHz
-    audio_time_series, sr = load_audio(video_path)
+    audio_time_series, sr = load_audio(audio_path)
 
     # Get the video frame rate (fps)
     fps = 30
@@ -53,9 +52,9 @@ def extract_audio_features_mfcc(video_path):
     return np_array
 
 
-def extract_fft(video_path):
+def extract_fft(audio_path):
     # Load the audio file with a sampling rate of 44.1 kHz
-    audio_time_series, sr = load_audio(video_path)
+    audio_time_series, sr = load_audio(audio_path)
 
     # Get the video frame rate (fps)
     fps = 30
@@ -83,15 +82,18 @@ def extract_fft(video_path):
     return np_array
 
 
-def compute_features(video_file):
+def compute_features(audio_file):
     start = time.time()
-    video_name = os.path.basename(video_file)
+    video_name = os.path.basename(audio_file)
     vectors = []
-    audio_file_path = f'{OUTPUT_DIR}/{video_name.replace(".mp4", ".wav")}'
+    if ".wav" in video_name:
+        audio_file_path = f'{OUTPUT_DIR}/{video_name.replace(".mp4", ".wav")}'
+    else:
+        audio_file_path = audio_file
     if not os.path.exists(audio_file_path):
-        process_audio_from_video(video_file, audio_file_path)
-    mfcc_coefficients = extract_audio_features_mfcc(video_file)
-    fft_coefficients = extract_fft(video_file)
+        process_audio_from_video(audio_file, audio_file_path)
+    mfcc_coefficients = extract_audio_features_mfcc(audio_file_path)
+    fft_coefficients = extract_fft(audio_file_path)
     for i in range(len(mfcc_coefficients)):
         start_timestamp = i * 1 / 30
         frame_id = i

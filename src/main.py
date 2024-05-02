@@ -76,10 +76,13 @@ def search(video_file_path):
             video_file, original_video_name, frame_num, video_end_time - start, end - audio_start, end - start))
 
 
-def search_query(query_vid, query_aud=None):
+def search_query(query_vid, query_aud):
     # Search the query video in the database
-    original_video_name = search_video(query_vid)
-    frame_num = search_audio(query_vid, original_video_name)
+    start = time.time()
+    original_video_name, _, _ = search_video(query_vid)
+    frame_num = search_audio(query_aud, original_video_name)
+    end = time.time()
+    print("**** Detected for {} : {} | {}".format(query_vid, original_video_name, frame_num + 1))
     return os.path.join(DATA_PATH, original_video_name), frame_num + 1
 
 
@@ -113,6 +116,7 @@ def parse_args():
 
 if __name__ == "__main__":
     # Parse command line arguments
+
     args = parse_args()
 
     if args.player:

@@ -32,32 +32,36 @@ def load_video_vectors(csv_file):
 def load_audio_vectors(csv_file):
     df = pd.read_csv(csv_file)
     print("size of csv file", df.shape)
-    # df["embedding"] = df["embedding"].astype(str)
-    # res = []
-    # for i in df["embedding"]:
-    #     sd = json.loads(i)
-    #     res.append(sd)
-    # temp_df = pd.DataFrame()
-    # temp_df["embedding"] = res
-    # df["embedding"] = temp_df["embedding"]
-    # size = len(df["embedding"][1])
-    # ac.createTable(size)
-    # ac.insertEmbedding(df)
+    df["embedding"] = df["embedding"].astype(str)
+    res = []
+    for i in df["embedding"]:
+        sd = json.loads(i)
+        res.append(sd)
+    temp_df = pd.DataFrame()
+    temp_df["embedding"] = res
+    df["embedding"] = temp_df["embedding"]
+    size = len(df["embedding"][1])
+    ac.createTable(size)
+    ac.insertEmbedding(df)
 
 
 def search_video(video_file):
     start = time.time()
     features = fe.compute_features_optimized(video_file, block_size=4)
     end = time.time()
-    # print("**** Extracting features for {} took {} seconds".format(video_file, end - start))
+    print("**** Extracting features for {} took {} seconds".format(video_file, end - start))
     embeddings = features["embedding"]
     vector_detected_video, min_frame, max_frame = vc.get_video_name(embeddings)
-    # print("**** Detected video for {} : {}".format(video_file, vector_detected_video))
+    print("**** Detected video for {} : {}".format(video_file, vector_detected_video))
     return vector_detected_video, min_frame, max_frame
 
 
-def search_audio(video_file, video_name):
-    features = afe.compute_features(video_file)
+def search_audio(audio_file, video_name):
+    start = time.time()
+    features = afe.compute_features(audio_file)
+    end = time.time()
+    print("**** Extracting features for {} took {} seconds".format(audio_file, end - start))
+    start = time.time()
     embeddings = features["embedding"]
     result = []
     res_mode = []
@@ -83,7 +87,8 @@ def search_audio(video_file, video_name):
         f" {frequency_distribution[lis[3]] / len(res_mode)},"
         f" {frequency_distribution[lis[4]] / len(res_mode)}")
     print(f"variance is : {cf_var}")
-
+    end = time.time()
+    print("**** Computing frame number for {} took {} seconds".format(audio_file, end - start))
     return mode
 
 
