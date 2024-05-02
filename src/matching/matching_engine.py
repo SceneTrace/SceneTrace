@@ -1,5 +1,5 @@
 import time
-
+import sys
 import numpy as np
 from src.db import video_client as vc
 from src.db import audio_client as ac
@@ -15,6 +15,7 @@ from collections import defaultdict
 
 def load_video_vectors(csv_file):
     df = pd.read_csv(csv_file)
+    print("size of csv file", df.shape)
     df["embedding"] = df["embedding"].astype(str)
     res = []
     for i in df["embedding"]:
@@ -30,28 +31,29 @@ def load_video_vectors(csv_file):
 
 def load_audio_vectors(csv_file):
     df = pd.read_csv(csv_file)
-    df["embedding"] = df["embedding"].astype(str)
-    res = []
-    for i in df["embedding"]:
-        sd = json.loads(i)
-        res.append(sd)
-    temp_df = pd.DataFrame()
-    temp_df["embedding"] = res
-    df["embedding"] = temp_df["embedding"]
-    size = len(df["embedding"][1])
-    ac.createTable(size)
-    ac.insertEmbedding(df)
+    print("size of csv file", df.shape)
+    # df["embedding"] = df["embedding"].astype(str)
+    # res = []
+    # for i in df["embedding"]:
+    #     sd = json.loads(i)
+    #     res.append(sd)
+    # temp_df = pd.DataFrame()
+    # temp_df["embedding"] = res
+    # df["embedding"] = temp_df["embedding"]
+    # size = len(df["embedding"][1])
+    # ac.createTable(size)
+    # ac.insertEmbedding(df)
 
 
 def search_video(video_file):
     start = time.time()
     features = fe.compute_features_optimized(video_file, block_size=4)
     end = time.time()
-    print("**** Extracting features for {} took {} seconds".format(video_file, end - start))
+    # print("**** Extracting features for {} took {} seconds".format(video_file, end - start))
     embeddings = features["embedding"]
-    vector_detected_video = vc.get_video_name(embeddings)
-    print("**** Detected video for {} : {}".format(video_file, vector_detected_video))
-    return vector_detected_video
+    vector_detected_video, min_frame, max_frame = vc.get_video_name(embeddings)
+    # print("**** Detected video for {} : {}".format(video_file, vector_detected_video))
+    return vector_detected_video, min_frame, max_frame
 
 
 def search_audio(video_file, video_name):
@@ -70,6 +72,9 @@ def search_audio(video_file, video_name):
         frequency_distribution[frame_detected] += 1
 
     lis = sorted(frequency_distribution, key=frequency_distribution.get, reverse=True)
+    cf_0 = frequency_distribution[lis[0]] / len(res_mode)
+    cf_1 = frequency_distribution[lis[1]] / len(res_mode)
+    cf_var = ((cf_0 - cf_1) / cf_0) * 100
     mode, count = stats.mode(np.array(res_mode))
     print(
         f"confidence score is : {frequency_distribution[lis[0]] / len(res_mode)},"
@@ -77,6 +82,8 @@ def search_audio(video_file, video_name):
         f" {frequency_distribution[lis[2]] / len(res_mode)},"
         f" {frequency_distribution[lis[3]] / len(res_mode)},"
         f" {frequency_distribution[lis[4]] / len(res_mode)}")
+    print(f"variance is : {cf_var}")
+
     return mode
 
 

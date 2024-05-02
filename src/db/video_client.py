@@ -67,6 +67,7 @@ def get_top3_similar_docs(query_embedding, video_name):
     top3_docs = cur.fetchall()
     return top3_docs
 
+
 def get_video_name(query_embedding_list):
     register_vector(conn)
     cur = conn.cursor()
@@ -74,9 +75,16 @@ def get_video_name(query_embedding_list):
     res = []
     for query_embedding in query_embedding_list:
         embedding_array = np.array(query_embedding)
-        cur.execute("SELECT video_name, time_stamp FROM embeddings ORDER BY embedding <=> %s LIMIT 1", (embedding_array,))
+        cur.execute("SELECT video_name, frame_num, time_stamp FROM embeddings ORDER BY embedding <=> %s LIMIT 1", (embedding_array,))
         res.append(cur.fetchall())
     dic = defaultdict(int)
-    for i in res:
-        dic[i[0][0]] += 1
-    return max(dic, key=dic.get)
+    possible_frames = defaultdict(list)
+    for i in range(len(res)):
+        name = res[i][0][0]
+        frame_count = res[i][0][1]
+        possible_frames[name].append(frame_count - (i * 30))
+        dic[name] += 1
+    possible_video = max(dic, key=dic.get)
+    min_range = np.percentile(possible_frames[possible_video], 25)
+    max_range = np.percentile(possible_frames[possible_video], 75)
+    return possible_video, min_range, max_range

@@ -68,3 +68,16 @@ def get_top3_similar_docs(query_embedding, video_name):
         "SELECT video_name, time_stamp, frame_num FROM audio_embeddings where video_name = '{}' ORDER BY embedding <=> %s LIMIT 3".format(video_name), (embedding_array,))
     top3_docs = cur.fetchall()
     return top3_docs
+
+
+def get_top_similar_docs_filter_frame(query_embedding, video_name, max_frame, min_frame):
+    register_vector(conn)
+    embedding_array = np.array(query_embedding)
+    cur = conn.cursor()
+    # Get the top 3 most similar documents using the KNN <=> operator
+
+    cur.execute(
+        "SELECT video_name, time_stamp, frame_num FROM audio_embeddings where video_name = '{}' AND "
+        "frame_num BETWEEN {} AND {} ORDER BY embedding <=> %s LIMIT 3".format(video_name, int(min_frame), int(max_frame), (embedding_array,)))
+    top3_docs = cur.fetchall()
+    return top3_docs

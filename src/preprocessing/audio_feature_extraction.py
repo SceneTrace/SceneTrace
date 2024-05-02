@@ -99,5 +99,5 @@ def compute_features(video_file):
         vectors.append([video_name, start_timestamp, frame_id, embed])
     pandas_df = pd.DataFrame(vectors, columns=['video_name', 'time_stamp', 'frame_num', 'embedding'])
     end = time.time()
-    print(f"Time taken to compute features for {video_name}: {end - start} seconds")
+    # print(f"Time taken to compute features for {video_name}: {end - start} seconds")
     return pandas_df

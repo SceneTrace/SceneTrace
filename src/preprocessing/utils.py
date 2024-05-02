@@ -62,7 +62,6 @@ def calculate_variance(frame):
 
 def process_audio_from_video(video_file_path, audio_file_path):
     # Extract Audio
-    print("Extracting audio from video: ", video_file_path)
     video_clip = VideoFileClip(video_file_path)
     audio_clip = video_clip.audio
     audio_clip.write_audiofile(audio_file_path)

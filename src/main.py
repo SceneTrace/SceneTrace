@@ -56,23 +56,24 @@ def extract(file_path, store=False, video=False, audio=False):
         print("Creating index for audio vectors took {} seconds".format(end - start))
 
 
-def search(video_file_path, audio_file_path=None):
+def search(video_file_path):
     # Search the query video in the database
     video_files = files_in_directory(video_file_path, format=".mp4")
     for video_file in video_files:
         print("#" * 80)
         start = time.time()
-        original_video_name = search_video(video_file)
+        original_video_name, min_frame, max_frame = search_video(video_file)
         video_end_time = time.time()
-        print("Searching video {} took {} seconds".format(video_file, video_end_time - start))
         audio_start = time.time()
         frame_num = search_audio(video_file, original_video_name)
         end = time.time()
-        print("Searching audio for {} took {} seconds".format(video_file, end - audio_start))
-        print("Complete Search for {} took {} seconds".format(video_file, end - start))
-        # print("*** VIDEO NAME: {} DETECTED : {}".format(video_file, original_video_name.replace(".", "_"+str(
-        #   frame_num+1)+".")))
-    return os.path.join(DATA_PATH, original_video_name), frame_num + 1
+        print("Video: {} \n"
+              " Detected Video: {} \n"
+              " Frame num: {}"
+              " \n videoTime: {}"
+              " \n audioTime: {}"
+              " \n totalTime: {}".format(
+            video_file, original_video_name, frame_num, video_end_time - start, end - audio_start, end - start))
 
 
 def search_query(query_vid, query_aud=None):

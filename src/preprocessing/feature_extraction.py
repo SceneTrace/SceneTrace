@@ -175,12 +175,12 @@ def compute_features_optimized(video_file, block_size=8):
     video_name = os.path.basename(video_file)
     frames = extract_frames(video_file)
     time_end = time.time()
-    print(f'Extracting frames took {time_end - time_start} seconds')
+    # print(f'Extracting frames took {time_end - time_start} seconds')
     time_start = time.time()
     vectors = process_video_frames(video_name, frames, block_size, 10)
     pandas_df = pd.DataFrame(vectors, columns=['video_name', 'time_stamp', 'frame_num', 'embedding'])
     time_end = time.time()
-    print(f'Computing features took {time_end - time_start} seconds')
+    # print(f'Computing features took {time_end - time_start} seconds')
     return pandas_df
 
 
