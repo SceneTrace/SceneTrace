@@ -2,8 +2,9 @@ import os
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
-from src.constants import APP_NAME, VID_WIDTH, VID_HEIGHT
+from src.constants import APP_NAME, VID_WIDTH, VID_HEIGHT, FPS
 from src.gui.custom_player import CustomVideoPlayer
+from src.utils.time_utils import calculate_time
 
 
 def file_selection():
@@ -104,13 +105,19 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
                         background='steelblue', thickness=5)
 
     def update_progress():
-        """Updates the progress bar based on the video's current playback state."""
+        """Updates the progress bar and timestamp labels."""
         if video_player.is_playing():
             length = video_player.get_length()
             time = video_player.get_time()
             if length > 0:
                 percentage = int((time / length) * 100)
                 progress['value'] = percentage
+
+                # Update current timestamp label
+                current_time_seconds = time // 1000
+                current_minutes, current_seconds = calculate_time(current_time_seconds)
+                current_timestamp_label.config(text=f"{current_minutes:02d}:{current_seconds:02d}")
+
         video_window.after(1000, update_progress)
 
     def close_player(new_query=False):
@@ -147,6 +154,12 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
 
     video_player = CustomVideoPlayer(vlc_instance, filepath, video_canvas, start_frame)
     video_player.setup_window()
+
+    # Calculate start time and total length
+    start_time_seconds = start_frame // FPS
+
+    # Calculate minutes and seconds for start time and total length
+    start_minutes, start_seconds = calculate_time(start_time_seconds)
 
     # Info and button frame
     info_frame = tk.Frame(video_window)
@@ -200,6 +213,9 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
     speed_combobox.set("1.0")  # Set default speed to normal (1.0x)
     speed_combobox.bind("<<ComboboxSelected>>", lambda event: video_player.change_playback_speed(speed_combobox.get()))
     speed_combobox.pack(side=tk.LEFT, padx=10)
+
+    current_timestamp_label = ttk.Label(control_frame, text=f"{start_minutes:02d}:{start_seconds:02d}", anchor="w")
+    current_timestamp_label.pack(side=tk.LEFT, padx=10)
 
     progress = ttk.Progressbar(control_frame, style="Modern.Horizontal.TProgressbar",
                                orient="horizontal", length=400, mode='determinate', maximum=100)
