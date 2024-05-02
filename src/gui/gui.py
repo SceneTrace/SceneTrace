@@ -99,7 +99,6 @@ def play_video(vlc_instance, filepath, start_frame=0, processing_time=30, callba
                         font=('Helvetica', 14),
                         arrowsize=15,
                         padding=5)
-        style.theme_use('clam')  # Using the 'clam' theme as a base for customization
         style.configure("Modern.Horizontal.TProgressbar", troughcolor='lightgrey',
                         bordercolor='grey', lightcolor='lightgrey', darkcolor='grey',
                         background='steelblue', thickness=5)

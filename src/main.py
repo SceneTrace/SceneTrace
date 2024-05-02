@@ -1,4 +1,6 @@
 import argparse
+import threading
+from threading import Thread
 from time import perf_counter
 
 import tkinter as tk
@@ -7,8 +9,9 @@ from src.gui import gui
 import os
 import time
 
-from constants import OUTPUT_DIR, APP_NAME
-from matching.matching_engine import load_video_vectors, load_audio_vectors, extract_video_features, extract_audio_features, search_audio, \
+from constants import OUTPUT_DIR, APP_NAME, DATA_PATH
+from matching.matching_engine import load_video_vectors, load_audio_vectors, extract_video_features, \
+    extract_audio_features, search_audio, \
     search_video
 from src.db import audio_client as ac
 from src.db import video_client as vc
@@ -53,22 +56,30 @@ def extract(file_path, store=False, video=False, audio=False):
         print("Creating index for audio vectors took {} seconds".format(end - start))
 
 
-def search(video_file_path):
+def search(video_file_path, audio_file_path=None):
     # Search the query video in the database
     video_files = files_in_directory(video_file_path, format=".mp4")
     for video_file in video_files:
-        print("#"*80)
+        print("#" * 80)
         start = time.time()
         original_video_name = search_video(video_file)
         video_end_time = time.time()
-        print("Searching video {} took {} seconds".format(video_file, video_end_time-start))
+        print("Searching video {} took {} seconds".format(video_file, video_end_time - start))
         audio_start = time.time()
         frame_num = search_audio(video_file, original_video_name)
         end = time.time()
-        print("Searching audio for {} took {} seconds".format(video_file, end-audio_start))
-        print("Complete Search for {} took {} seconds".format(video_file, end-start))
-        print("*** VIDEO NAME: {} DETECTED : {}".format(video_file, original_video_name.replace(".", "_"+str(
-            frame_num-1)+".")))
+        print("Searching audio for {} took {} seconds".format(video_file, end - audio_start))
+        print("Complete Search for {} took {} seconds".format(video_file, end - start))
+        # print("*** VIDEO NAME: {} DETECTED : {}".format(video_file, original_video_name.replace(".", "_"+str(
+        #   frame_num+1)+".")))
+    return os.path.join(DATA_PATH, original_video_name), frame_num + 1
+
+
+def search_query(query_vid, query_aud=None):
+    # Search the query video in the database
+    original_video_name = search_video(query_vid)
+    frame_num = search_audio(query_vid, original_video_name)
+    return os.path.join(DATA_PATH, original_video_name), frame_num + 1
 
 
 def validate_args(arguments):
@@ -89,7 +100,7 @@ def parse_args():
     parser.add_argument("--audio", action="store_true", help="extract audio vectors")
     parser.add_argument('inputs', nargs='*', help='Optional list of extra arguments without tags')
     arguments = parser.parse_args()
-    #validate_args(arguments)
+    # validate_args(arguments)
     if arguments.store:
         if not os.path.exists(arguments.output_dir):
             os.makedirs(arguments.output_dir)
@@ -112,6 +123,13 @@ if __name__ == "__main__":
             continue_playing.append(new_query)
 
 
+        def perform_loading(load_root, event):
+            gui.start_loading_screen(load_root)
+            while not event.is_set():
+                load_root.update()  # Manually handle Tkinter updates
+            gui.stop_loading_screen(load_root)  # Safely close the window within the same thread
+
+
         while continue_playing[0]:
 
             # File selection
@@ -122,22 +140,32 @@ if __name__ == "__main__":
                 # Create a new window for loading
                 loading_root = tk.Tk()
                 loading_root.title(APP_NAME)
-                gui.start_loading_screen(loading_root)  # Start the processing text animation
 
-                start_time = perf_counter()
+                gui.start_loading_screen(loading_root)
 
-                # TODO: Simulate processing, replace with search
-                loading_root.after(3000, lambda: gui.stop_loading_screen(loading_root))
-                loading_root.mainloop()
+                # Use a separate thread for long-running search query
+                result = {}
 
-                # TODO: Call function to stop loading here instead, after the search is complete
-                process_time = perf_counter() - start_time
 
-                # TODO: Replace query video path and start_frame with the search result
-                gui.play_video(vlc_instance=vlc_instance, filepath=query_video,
-                               start_frame=16200,
-                               processing_time=process_time,
+                def run_search():
+                    start_time = perf_counter()
+                    result['video'], result['start_frame'] = search_query(query_video, query_audio)
+                    result['process_time'] = perf_counter() - start_time
+                    loading_root.quit()  # Stop the Tkinter loop once done
+
+
+                search_thread = threading.Thread(target=run_search)
+                search_thread.start()
+                loading_root.mainloop()  # This will block until loading_root.quit() is called
+
+                # After mainloop (i.e., search is done), destroy the window
+                loading_root.destroy()
+
+                # Continue with video playback and GUI updates
+                gui.play_video(vlc_instance=vlc_instance, filepath=result['video'],
+                               start_frame=result['start_frame'], processing_time=result['process_time'],
                                callback=callback)
+
             else:
                 continue_playing = False  # Exit the loop if no file is selected
     else:
