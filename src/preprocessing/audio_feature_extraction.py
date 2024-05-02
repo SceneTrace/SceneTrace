@@ -15,7 +15,7 @@ audio_time_series_dictionary = {}
 
 
 def load_audio(video_path):
-    audio_file_path = f'{OUTPUT_DIR}/{video_path.split("/")[-1].replace(".mp4", ".wav")}'
+    audio_file_path = video_path.replace(".mp4", ".wav")
     if video_path not in audio_time_series_dictionary.keys():
         audio_time_series, sr = librosa.load(audio_file_path, sr=44100, mono=True)
         audio_time_series_dictionary[video_path] = audio_time_series, sr
@@ -47,9 +47,6 @@ def extract_audio_features_mfcc(video_path):
         maxi = max(maxi, np.max(temp))
         mini = min(mini, np.min(temp))
         np_array.append(temp)
-    # for i, lis in enumerate(np_array):
-    #     np_array[i] = (lis - mini) / (maxi - mini)
-    #     np_array[i] = append_zeros(np_array[i], 100)
     return np_array
 
 
@@ -87,7 +84,7 @@ def compute_features(video_file):
     start = time.time()
     video_name = os.path.basename(video_file)
     vectors = []
-    audio_file_path = f'{OUTPUT_DIR}/{video_name.replace(".mp4", ".wav")}'
+    audio_file_path = video_file.replace(".mp4", ".wav")
     if not os.path.exists(audio_file_path):
         process_audio_from_video(video_file, audio_file_path)
     mfcc_coefficients = extract_audio_features_mfcc(video_file)

@@ -62,3 +62,5 @@ numpy==1.26.4
 pgvector==0.2.5
 pandas==2.2.2
 python-vlc==3.0.20123
+PyWavelets==1.6.0
+Flask==3.0.3

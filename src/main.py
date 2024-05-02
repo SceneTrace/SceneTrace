@@ -1,10 +1,7 @@
 import argparse
-from time import perf_counter
-
-import tkinter as tk
-
 import os
 import time
+from flask import Flask, render_template, request
 
 from constants import OUTPUT_DIR, APP_NAME
 from matching.matching_engine import load_video_vectors, load_audio_vectors, extract_video_features, extract_audio_features, search_audio, \
@@ -12,6 +9,8 @@ from matching.matching_engine import load_video_vectors, load_audio_vectors, ext
 from src.db import audio_client as ac
 from src.db import video_client as vc
 from utils.file_utils import files_in_directory, fetch_files
+
+app = Flask(__name__)
 
 
 def load(file_path):
@@ -67,6 +66,8 @@ def search(video_file_path):
         print("Complete Search for {} took {} seconds".format(video_file, end-start))
         print("*** VIDEO NAME: {} DETECTED : {}".format(video_file, original_video_name.replace(".", "_"+str(
             frame_num-1)+".")))
+        print("Searching video {} took {} seconds".format(video_file, end - start))
+        return video_name, frame_num
 
 
 def validate_args(arguments):
@@ -82,12 +83,11 @@ def parse_args():
     parser.add_argument("--output-dir", type=str, required=False, help="Name of the video file.",
                         default=OUTPUT_DIR)
     parser.add_argument("--store", action="store_true", help="store the vectors")
-    parser.add_argument("--player", action="store_true", help="Play video using player")
     parser.add_argument("--video", action="store_true", help="extract video vectors")
     parser.add_argument("--audio", action="store_true", help="extract audio vectors")
     parser.add_argument('inputs', nargs='*', help='Optional list of extra arguments without tags')
     arguments = parser.parse_args()
-    #validate_args(arguments)
+    validate_args(arguments)
     if arguments.store:
         if not os.path.exists(arguments.output_dir):
             os.makedirs(arguments.output_dir)
@@ -97,12 +97,25 @@ def parse_args():
     return arguments
 
 
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        video_location = request.form.get("video")
+        video_name, frame_number = search(video_location)
+        off_set_time = frame_number / 30
+        return render_template('/templates/video.html', video_name=video_name,off_set_time=off_set_time)
+    return render_template('/templates/index.html')
+
+
 if __name__ == "__main__":
     # Parse command line arguments
-    args = parse_args()
-    if args.action.lower() == "load":
-        load(args.inputs[0])
-    elif args.action.lower() == "extract":
-        extract(args.inputs[0], store=args.store, video=args.video, audio=args.audio)
-    elif args.action.lower() == "search":
-        search(args.inputs[0])
+    # args = parse_args()
+    # if args.action.lower() == "load":
+    #     load(args.inputs[0])
+    # elif args.action.lower() == "extract":
+    #     extract(args.inputs[0], store=args.store, video=args.video, audio=args.audio)
+    # elif args.action.lower() == "search":
+    #     search(args.inputs[0])
+    # else:
+    #     raise ValueError("Invalid action. Please provide a valid action: Load, Extract, Search")
+    app.run(debug=True, port=8000)
