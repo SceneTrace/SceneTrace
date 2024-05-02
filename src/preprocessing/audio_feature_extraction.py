@@ -86,7 +86,7 @@ def compute_features(audio_file):
     start = time.time()
     video_name = os.path.basename(audio_file)
     vectors = []
-    if ".wav" in video_name:
+    if ".wav" not in video_name:
         audio_file_path = f'{OUTPUT_DIR}/{video_name.replace(".mp4", ".wav")}'
     else:
         audio_file_path = audio_file
