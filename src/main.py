@@ -67,7 +67,7 @@ def search(video_file_path):
         print("*** VIDEO NAME: {} DETECTED : {}".format(video_file, original_video_name.replace(".", "_"+str(
             frame_num-1)+".")))
         print("Searching video {} took {} seconds".format(video_file, end - start))
-        return video_name, frame_num
+        return original_video_name, frame_num
 
 
 def validate_args(arguments):
@@ -101,21 +101,16 @@ def parse_args():
 def index():
     if request.method == 'POST':
         video_location = request.form.get("video")
+        start_time = time.time()
         video_name, frame_number = search(video_location)
         off_set_time = frame_number / 30
-        return render_template('/templates/video.html', video_name=video_name,off_set_time=off_set_time)
+        end_time = time.time()
+        time_taken = end_time - start_time
+        return render_template('/templates/video.html',
+                               video_name=video_name,off_set_time=off_set_time,
+                               time_taken=time_taken, frame_number=frame_number+1)
     return render_template('/templates/index.html')
 
 
 if __name__ == "__main__":
-    # Parse command line arguments
-    # args = parse_args()
-    # if args.action.lower() == "load":
-    #     load(args.inputs[0])
-    # elif args.action.lower() == "extract":
-    #     extract(args.inputs[0], store=args.store, video=args.video, audio=args.audio)
-    # elif args.action.lower() == "search":
-    #     search(args.inputs[0])
-    # else:
-    #     raise ValueError("Invalid action. Please provide a valid action: Load, Extract, Search")
     app.run(debug=True, port=8000)
