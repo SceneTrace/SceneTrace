@@ -3,7 +3,6 @@ from time import perf_counter
 
 import tkinter as tk
 
-from src.gui import gui
 import os
 import time
 
@@ -12,7 +11,6 @@ from matching.matching_engine import load_video_vectors, load_audio_vectors, ext
     search_video
 from src.db import audio_client as ac
 from src.db import video_client as vc
-from src.gui.custom_player import CustomVideoPlayer
 from utils.file_utils import files_in_directory, fetch_files
 
 
@@ -102,48 +100,9 @@ def parse_args():
 if __name__ == "__main__":
     # Parse command line arguments
     args = parse_args()
-
-    if args.player:
-        continue_playing = [True]
-
-
-        def callback(new_query):
-            continue_playing.clear()
-            continue_playing.append(new_query)
-
-
-        while continue_playing[0]:
-
-            # File selection
-            query_video, query_audio = gui.file_selection()
-            vlc_instance = CustomVideoPlayer.setup_vlc_instance()
-
-            if query_video and query_audio:
-                # Create a new window for loading
-                loading_root = tk.Tk()
-                loading_root.title(APP_NAME)
-                gui.start_loading_screen(loading_root)  # Start the processing text animation
-
-                start_time = perf_counter()
-
-                # TODO: Simulate processing, replace with search
-                loading_root.after(3000, lambda: gui.stop_loading_screen(loading_root))
-                loading_root.mainloop()
-
-                # TODO: Call function to stop loading here instead, after the search is complete
-                process_time = perf_counter() - start_time
-
-                # TODO: Replace query video path and start_frame with the search result
-                gui.play_video(vlc_instance=vlc_instance, filepath=query_video,
-                               start_frame=16200,
-                               processing_time=process_time,
-                               callback=callback)
-            else:
-                continue_playing = False  # Exit the loop if no file is selected
-    else:
-        if args.action.lower() == "load":
-            load(args.inputs[0])
-        elif args.action.lower() == "extract":
-            extract(args.inputs[0], store=args.store, video=args.video, audio=args.audio)
-        elif args.action.lower() == "search":
-            search(args.inputs[0])
+    if args.action.lower() == "load":
+        load(args.inputs[0])
+    elif args.action.lower() == "extract":
+        extract(args.inputs[0], store=args.store, video=args.video, audio=args.audio)
+    elif args.action.lower() == "search":
+        search(args.inputs[0])
